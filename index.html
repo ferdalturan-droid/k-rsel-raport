@@ -66,7 +66,6 @@
             color: #333;
         }
 
-        /* Tablo Stili - Bilgisayardaki gibi */
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -99,6 +98,10 @@
 
         .data-table tr.pause {
             background: #fef3c7;
+        }
+
+        .data-table tr.same-day {
+            background: #fee2e2;
         }
 
         .data-table input {
@@ -140,7 +143,15 @@
             padding: 2px 6px;
         }
 
-        /* Form alanları */
+        .btn-same-day {
+            background: #dc2626;
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 4px;
+            border-radius: 2px;
+            margin-left: 4px;
+        }
+
         .form-row {
             display: flex;
             gap: 8px;
@@ -182,6 +193,7 @@
             padding: 8px 12px;
             background: #f8f8f8;
             border-bottom: 1px solid #ddd;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -206,6 +218,11 @@
 
         .btn-warning {
             background: #f59e0b;
+            color: white;
+        }
+
+        .btn-info {
+            background: #3b82f6;
             color: white;
         }
 
@@ -289,12 +306,11 @@
             padding-bottom: 70px;
         }
 
-        /* Kolon genişlikleri */
-        .col-date { width: 12%; }
-        .col-container { width: 10%; }
         .col-fraction { width: 18%; }
-        .col-address { width: 25%; }
-        .col-weight { width: 12%; }
+        .col-facility { width: 20%; }
+        .col-address { width: 22%; }
+        .col-container { width: 12%; }
+        .col-weight { width: 10%; }
         .col-time { width: 10%; }
         .col-action { width: 8%; }
 
@@ -306,13 +322,8 @@
             font-weight: 700;
         }
 
-        .badge-done {
-            background: #16a34a;
-            color: white;
-        }
-
-        .badge-wait {
-            background: #f59e0b;
+        .badge-same-day {
+            background: #dc2626;
             color: white;
         }
 
@@ -336,10 +347,37 @@
             opacity: 1;
         }
 
-        /* Telefonda yatay kaydırma için */
         .table-wrapper {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
+        }
+
+        .add-tour-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 10px;
+            background: #f0f9ff;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .add-tour-form input {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            font-size: 0.8rem;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            grid-column: span 2;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            width: auto;
         }
     </style>
 </head>
@@ -422,26 +460,41 @@
                 </div>
             </div>
 
-            <!-- Tur Listesi - Tablo Formatı -->
+            <!-- Manuel Tur Ekleme -->
+            <div class="section">
+                <div class="section-header">Tilføj ny tur manuelt</div>
+                <div class="add-tour-form">
+                    <input type="text" id="manualFraction" placeholder="Fraktion (f.eks. Pap, Metal)">
+                    <input type="text" id="manualFacility" placeholder="Modtageanlæg (f.eks. Stena)">
+                    <input type="text" id="manualAddress" placeholder="Adresse">
+                    <input type="text" id="manualContainer" placeholder="Container nr.">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="sameDayOrder"> Samme dags bestilling (rød markering)
+                    </label>
+                    <button class="btn btn-info" onclick="addManualTour()" style="grid-column: span 2;">Tilføj tur</button>
+                </div>
+            </div>
+
+            <!-- Tur Listesi -->
             <div class="section content-area">
-                <div class="section-header">Dagens ture (sorteret efter adresse)</div>
+                <div class="section-header">Dagens ture</div>
                 <div class="table-wrapper" id="toursTable">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th class="col-date">Dato</th>
-                                <th class="col-container">Cont.</th>
-                                <th class="col-fraction">Fraktion</th>
-                                <th class="col-address">Adresse</th>
-                                <th class="col-weight">Vægt</th>
-                                <th class="col-time">Tid</th>
-                                <th class="col-action">Status</th>
+                                <th class="col-fraction">FRAKTION</th>
+                                <th class="col-facility">AFLÆS. STED</th>
+                                <th class="col-address">ADRESSE</th>
+                                <th class="col-container">CONT.</th>
+                                <th class="col-weight">VÆGT</th>
+                                <th class="col-time">TID</th>
+                                <th class="col-action">OK</th>
                             </tr>
                         </thead>
                         <tbody id="toursBody">
                             <tr>
                                 <td colspan="7" style="text-align: center; padding: 30px; color: #999;">
-                                    Ingen ture endnu. Indsæt fra mail ovenfor.
+                                    Ingen ture endnu
                                 </td>
                             </tr>
                         </tbody>
@@ -450,7 +503,6 @@
             </div>
         </div>
 
-        <!-- PDF Footer -->
         <div class="pdf-footer">
             <button class="btn btn-success" onclick="generatePDF()">
                 📄 Generer PDF Rapport
@@ -511,6 +563,7 @@
                         weight: '',
                         time: '',
                         isPause: false,
+                        isSameDay: false,
                         plads: currentPlads
                     });
                     added++;
@@ -526,6 +579,46 @@
             }
         }
 
+        function addManualTour() {
+            const fraction = document.getElementById('manualFraction').value;
+            const facility = document.getElementById('manualFacility').value;
+            const address = document.getElementById('manualAddress').value;
+            const container = document.getElementById('manualContainer').value;
+            const isSameDay = document.getElementById('sameDayOrder').checked;
+
+            if (!fraction || !facility) {
+                return showToast('Udfyld fraktion og modtageanlæg!');
+            }
+
+            tours.push({
+                id: tourIdCounter++,
+                date: new Date().toLocaleDateString('da-DK'),
+                container: container || '-',
+                fraction: fraction,
+                facility: facility,
+                address: address || '-',
+                note: isSameDay ? 'Samme dags bestilling' : '',
+                completed: false,
+                weight: '',
+                time: '',
+                isPause: false,
+                isSameDay: isSameDay,
+                plads: currentPlads
+            });
+
+            // Clear inputs
+            document.getElementById('manualFraction').value = '';
+            document.getElementById('manualFacility').value = '';
+            document.getElementById('manualAddress').value = '';
+            document.getElementById('manualContainer').value = '';
+            document.getElementById('sameDayOrder').checked = false;
+
+            tours = sortByAddress(tours);
+            renderTours();
+            updateStats();
+            showToast('Tur tilføjet!');
+        }
+
         function addPause() {
             tours.push({
                 id: tourIdCounter++,
@@ -539,6 +632,7 @@
                 time: '',
                 isPause: true,
                 pauseDuration: '45',
+                isSameDay: false,
                 plads: ''
             });
             renderTours();
@@ -549,7 +643,7 @@
         function renderTours() {
             const tbody = document.getElementById('toursBody');
             if (!tours.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; color: #999;">Ingen ture endnu. Indsæt fra mail ovenfor.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; color: #999;">Ingen ture endnu</td></tr>';
                 return;
             }
 
@@ -558,24 +652,26 @@
             const sorted = [...sortByAddress(completed), ...sortByAddress(pending)];
 
             tbody.innerHTML = sorted.map(t => {
+                const sameDayBadge = t.isSameDay ? '<span class="badge badge-same-day">SAMME DAG</span>' : '';
+                
                 if (t.isPause) {
                     return `<tr class="pause">
-                        <td>${t.date}</td>
+                        <td colspan="2"><strong>☕ PAUSE ${t.pauseDuration} min</strong></td>
                         <td>-</td>
-                        <td><strong>PAUSE</strong></td>
                         <td>-</td>
-                        <td><input type="number" value="${t.pauseDuration}" onchange="updatePause(${t.id}, this.value)" style="width: 50px;"> min</td>
-                        <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)"></td>
+                        <td>-</td>
+                        <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
                         <td><button class="btn-small btn-remove" onclick="removeTour(${t.id})">🗑️</button></td>
                     </tr>`;
                 }
-                return `<tr class="${t.completed ? 'completed' : ''}">
-                    <td>${t.date}</td>
-                    <td>${t.container}</td>
-                    <td>${t.fraction}</td>
+
+                return `<tr class="${t.completed ? 'completed' : ''} ${t.isSameDay ? 'same-day' : ''}">
+                    <td>${t.fraction} ${sameDayBadge}</td>
+                    <td>${t.facility}</td>
                     <td>${t.address}</td>
-                    <td><input type="number" placeholder="0" value="${t.weight}" onchange="updateWeight(${t.id}, this.value)"></td>
-                    <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)"></td>
+                    <td>${t.container}</td>
+                    <td><input type="number" placeholder="0" value="${t.weight}" onchange="updateWeight(${t.id}, this.value)" style="width: 60px;"></td>
+                    <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
                     <td>
                         ${t.completed 
                             ? `<button class="btn-small btn-undo" onclick="toggleComplete(${t.id})">↩️</button>`
@@ -599,14 +695,6 @@
             const t = tours.find(x => x.id === id);
             if (t) {
                 t.time = time;
-                calculateTotalTime();
-            }
-        }
-
-        function updatePause(id, d) {
-            const t = tours.find(x => x.id === id);
-            if (t) {
-                t.pauseDuration = d;
                 calculateTotalTime();
             }
         }
@@ -713,50 +801,82 @@
                 columnStyles: {0: {cellWidth: 35}, 1: {cellWidth: 50}, 2: {cellWidth: 25}, 3: {cellWidth: 40}}
             });
             
-            // Tours table
-            const completed = tours.filter(t => (t.completed || t.isPause));
+            // Tours table - YENİ FORMAT
+            const completed = tours.filter(t => t.completed || t.isPause);
             let body = [];
             
+            // Başlık satırı (Plads adı)
             if (currentPlads) {
-                body.push([{content: currentPlads.toUpperCase(), colSpan: 6, styles: {fillColor: [254,243,199]}}]);
+                body.push([{content: currentPlads.toUpperCase(), colSpan: 6, styles: {fillColor: [254, 243, 199], fontStyle: 'bold', fontSize: 10}}]);
             }
             
             completed.forEach(t => {
                 if (t.isPause) {
-                    body.push([{content: `PAUSE ${t.pauseDuration}`, styles: {fillColor: [220,252,231]}}, '', '', '', t.time || '', '']);
-                } else {
+                    // Pause satırı - yeşil arka plan
                     body.push([
-                        t.plads || currentPlads || 'GLOSTRUP',
-                        t.facility.split(',')[0],
-                        t.container,
-                        t.weight ? `${t.weight} kg` : '',
-                        t.time || '',
-                        ''
+                        {content: `PAUSE ${t.pauseDuration}`, styles: {fillColor: [220, 252, 231], fontStyle: 'bold'}},
+                        {content: '', styles: {fillColor: [220, 252, 231]}},
+                        {content: '', styles: {fillColor: [220, 252, 231]}},
+                        {content: '', styles: {fillColor: [220, 252, 231]}},
+                        {content: t.time || '', styles: {fillColor: [220, 252, 231]}},
+                        {content: '', styles: {fillColor: [220, 252, 231]}}
+                    ]);
+                } else {
+                    // Normal tur satırı
+                    // Samme dags bestilling = rød baggrund
+                    const isSameDay = t.isSameDay;
+                    const rowStyle = isSameDay ? {fillColor: [254, 226, 226]} : {};
+                    
+                    body.push([
+                        {content: t.fraction, styles: rowStyle},           // 1. Fraktion (ne olduğu)
+                        {content: t.facility, styles: rowStyle},           // 2. Modtageanlæg (gideceği yer)
+                        {content: t.address, styles: rowStyle},            // 3. Adresse
+                        {content: t.weight ? `${t.weight} kg` : '', styles: {...rowStyle, fillColor: isSameDay ? [254, 226, 226] : [220, 252, 231]}}, // 4. Vægt (yeşil)
+                        {content: t.time || '', styles: {...rowStyle, fillColor: isSameDay ? [254, 226, 226] : [240, 240, 240]}}, // 5. Tid (gri)
+                        {content: '', styles: rowStyle}                     // 6. Netpå (boş)
                     ]);
                 }
             });
             
-            while (body.length < 15) body.push(['', '', '', '', '', '']);
+            // Boş satırlar doldur (en az 15 satır olsun)
+            while (body.length < 15) {
+                body.push(['', '', '', '', '', '']);
+            }
             
             doc.autoTable({
                 startY: doc.lastAutoTable.finalY + 5,
-                head: [['KUNDE', 'AFLÆS. STED', 'CONTAINE', 'VÆGT', 'TIL', 'NETPÅ']],
+                head: [['FRAKTION', 'AFLÆS. STED', 'ADRESSE', 'VÆGT', 'TIL', 'NETPÅ']],
                 body: body,
                 theme: 'grid',
-                headStyles: {fillColor: [251, 191, 36], fontSize: 9},
-                styles: {fontSize: 8, cellPadding: 3},
+                headStyles: { 
+                    fillColor: [251, 191, 36], 
+                    textColor: [0, 0, 0], 
+                    fontSize: 9,
+                    fontStyle: 'bold'
+                },
+                styles: {
+                    fontSize: 8, 
+                    cellPadding: 4,
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.5
+                },
                 columnStyles: {
-                    0: {cellWidth: 25}, 1: {cellWidth: 50}, 2: {cellWidth: 25}, 
-                    3: {cellWidth: 25}, 4: {cellWidth: 20}, 5: {cellWidth: 20}
+                    0: {cellWidth: 30},  // Fraktion
+                    1: {cellWidth: 40},  // Aflæs. sted
+                    2: {cellWidth: 45},  // Adresse
+                    3: {cellWidth: 20},  // Vægt
+                    4: {cellWidth: 20},  // Til
+                    5: {cellWidth: 15}   // Netpå
                 }
             });
             
-            // Footer
+            // Footer note - rød kasse
             const y = doc.lastAutoTable.finalY + 5;
             doc.setDrawColor(200, 0, 0);
+            doc.setLineWidth(0.5);
             doc.rect(20, y, 170, 12);
             doc.setTextColor(200, 0, 0);
-            doc.setFontSize(8);
+            doc.setFontSize(9);
             doc.text('Container med rød mærke bestilling af samme dag', 25, y + 7);
             
             doc.save(`Korselsrapport_${new Date().toISOString().split('T')[0]}.pdf`);
