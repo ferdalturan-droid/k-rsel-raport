@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KORKMAN2 - Kørselsrapport System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .header .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 25px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .section-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: #dc2626;
+            border-radius: 2px;
+        }
+
+        .paste-area {
+            width: 100%;
+            min-height: 120px;
+            border: 3px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 14px;
+            resize: vertical;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .paste-area:focus {
+            outline: none;
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(220, 38, 38, 0.4);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            color: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tours-container {
+            display: grid;
+            gap: 15px;
+        }
+
+        .tour-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tour-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #cbd5e1;
+            transition: all 0.3s;
+        }
+
+        .tour-card.pending::before {
+            background: #f59e0b;
+        }
+
+        .tour-card.completed {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border-color: #16a34a;
+        }
+
+        .tour-card.completed::before {
+            background: #16a34a;
+            width: 6px;
+        }
+
+        .tour-card.pause {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-color: #f59e0b;
+            border-style: dashed;
+        }
+
+        .tour-card.pause::before {
+            background: #f59e0b;
+            width: 6px;
+        }
+
+        .tour-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tour-info h3 {
+            color: #1e293b;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .tour-meta {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            font-size: 0.9em;
+            color: #64748b;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-completed {
+            background: #16a34a;
+            color: white;
+        }
+
+        .badge-pause {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .tour-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #475569;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-control {
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #dc2626;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #94a3b8;
+        }
+
+        .driver-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .driver-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .driver-card label {
+            font-size: 0.8em;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .driver-card input, .driver-card select {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #1e293b;
+            background: transparent;
+        }
+
+        .driver-card input:focus, .driver-card select:focus {
+            outline: none;
+            border-bottom-color: #dc2626;
+        }
+
+        .time-summary {
+            background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+            border: 2px solid #dc2626;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .time-summary h3 {
+            color: #991b1b;
+            margin-bottom: 10px;
+        }
+
+        .time-display {
+            font-size: 2em;
+            font-weight: 800;
+            color: #dc2626;
+        }
+
+        .plads-select {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .plads-btn {
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .plads-btn:hover {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .plads-btn.active {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1e293b;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .tour-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚛 KORKMAN2</h1>
+            <div class="subtitle">ILK Company ApS - Kørselsrapport System</div>
+        </div>
+
+        <div class="main-content">
+            <!-- İstatistikler -->
+            <div class="stats-bar">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalTours">0</div>
+                    <div class="stat-label">Antal ture</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="completedTours">0</div>
+                    <div class="stat-label">Afsluttede</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalWeight">0</div>
+                    <div class="stat-label">Total kg</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalTime">0t</div>
+                    <div class="stat-label">Total tid</div>
+                </div>
+            </div>
+
+            <!-- Şoför Bilgileri -->
+            <div class="section no-print">
+                <div class="section-title">Chauffør Information</div>
+                <div class="driver-info">
+                    <div class="driver-card">
+                        <label>Chauffør Navn</label>
+                        <input type="text" id="driverName" value="Ferdat Turan">
+                    </div>
+                    <div class="driver-card">
+                        <label>Vogn Nr. / Reg.Nr.</label>
+                        <input type="text" id="vehicleReg" value="EC25026">
+                    </div>
+                    <div class="driver-card">
+                        <label>Start Tid</label>
+                        <input type="time" id="startTime" value="07:00">
+                    </div>
+                    <div class="driver-card">
+                        <label>Slut Tid</label>
+                        <input type="time" id="endTime" onchange="calculateTotalTime()">
+                    </div>
+                    <div class="driver-card">
+                        <label>Plads / Område</label>
+                        <select id="pladsSelect" onchange="updatePlads(this.value)">
+                            <option value="">Vælg plads...</option>
+                            <option value="Glostrup">Glostrup</option>
+                            <option value="Herlev">Herlev</option>
+                            <option value="Hillerød">Hillerød</option>
+                            <option value="Ballerup">Ballerup</option>
+                            <option value="Skipstrup">Skipstrup</option>
+                            <option value="Helsingør">Helsingør</option>
+                            <option value="custom">Andet (skriv selv)</option>
+                        </select>
+                        <input type="text" id="customPlads" placeholder="Skriv plads navn" style="display:none; margin-top:10px;">
+                    </div>
+                </div>
+                
+                <div class="time-summary">
+                    <h3>⏱️ Total arbejdstid i dag</h3>
+                    <div class="time-display" id="timeDisplay">0t 0m</div>
+                </div>
+            </div>
+
+            <!-- Mail Yapıştırma -->
+            <div class="section no-print">
+                <div class="section-title">Indsæt ture fra mail</div>
+                <textarea 
+                    class="paste-area" 
+                    id="pasteArea" 
+                    placeholder="Kopier tabellen fra mailen og indsæt her...
+
+Eksempel:
+04-03-2026	93588	Umalet indendørs træ	Tømning	Vestforbrænding Frederikssund	Strandvangen 15, 3600 Frederikssund	7	16	Med hjem"></textarea>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick="parsePastedData()">
+                        <span>📋</span> Tilføj ture
+                    </button>
+                    <button class="btn btn-warning" onclick="addPause()">
+                        <span>☕</span> Tilføj pause
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearAll()">
+                        <span>🗑️</span> Ryd alt
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tur Listesi -->
+            <div class="section">
+                <div class="section-title">Dagens ture (sorteret efter adresse)</div>
+                <div id="toursList" class="tours-container">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <h3>Ingen ture endnu</h3>
+                        <p>Indsæt ture fra mailen ovenfor</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF Butonu -->
+            <div class="section no-print" style="text-align: center;">
+                <button class="btn btn-success" onclick="generatePDF()" style="font-size: 1.2em; padding: 16px 32px;">
+                    <span>📄</span> Generer PDF Rapport
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let tours = JSON.parse(localStorage.getItem('korkman2_tours')) || [];
+        let tourIdCounter = tours.length > 0 ? Math.max(...tours.map(t => t.id)) + 1 : 1;
+        let currentPlads = '';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTours();
+            updateStats();
+            calculateTotalTime();
+            
+            setInterval(() => {
+                localStorage.setItem('korkman2_tours', JSON.stringify(tours));
+            }, 5000);
+
+            // Özel plads input göster/gizle
+            document.getElementById('pladsSelect').addEventListener('change', function() {
+                const customInput = document.getElementById('customPlads');
+                if (this.value === 'custom') {
+                    customInput.style.display = 'block';
+                } else {
+                    customInput.style.display = 'none';
+                }
+            });
+        });
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function updatePlads(value) {
+            if (value === 'custom') {
+                currentPlads = document.getElementById('customPlads').value;
+            } else {
+                currentPlads = value;
+            }
+        }
+
+        // Adrese göre sıralama fonksiyonu
+        function sortToursByAddress(toursList) {
+            return toursList.sort((a, b) => {
+                // Önce adres karşılaştırması
+                const addrA = (a.address || '').toLowerCase();
+                const addrB = (b.address || '').toLowerCase();
+                
+                // Aynı adresse, fraksiyona göre sırala
+                if (addrA === addrB) {
+                    return (a.fraction || '').localeCompare(b.fraction || '');
+                }
+                return addrA.localeCompare(addrB);
+            });
+        }
+
+        function parsePastedData() {
+            const pasteArea = document.getElementById('pasteArea');
+            const text = pasteArea.value.trim();
+            
+            if (!text) {
+                showToast('Indsæt venligst data først!');
+                return;
+            }
+
+            const lines = text.split('\n').filter(line => line.trim());
+            let addedCount = 0;
+
+            lines.forEach(line => {
+                const cells = line.split(/\t|,{2,}|  +/).map(c => c.trim()).filter(c => c);
+                
+                if (cells.length >= 6) {
+                    const tour = {
+                        id: tourIdCounter++,
+                        date: cells[0] || new Date().toLocaleDateString('da-DK'),
+                        container: cells[1] || '',
+                        fraction: cells[2] || '',
+                        transportType: cells[3] || 'Tømning',
+                        facility: cells[4] || '',
+                        address: cells[5] || '',
+                        openFrom: cells[6] || '',
+                        openTo: cells[7] || '',
+                        note: cells[8] || '',
+                        completed: false,
+                        weight: '',
+                        time: '',
+                        isPause: false,
+                        plads: currentPlads
+                    };
+                    
+                    tours.push(tour);
+                    addedCount++;
+                }
+            });
+
+            if (addedCount > 0) {
+                // Adrese göre sırala
+                tours = sortToursByAddress(tours);
+                
+                pasteArea.value = '';
+                renderTours();
+                updateStats();
+                showToast(`${addedCount} ture tilføjet og sorteret!`);
+            } else {
+                showToast('Kunne ikke parse data. Tjek formatet.');
+            }
+        }
+
+        function addPause() {
+            const pauseTour = {
+                id: tourIdCounter++,
+                date: new Date().toLocaleDateString('da-DK'),
+                container: '',
+                fraction: 'PAUSE',
+                transportType: '',
+                facility: 'Pause',
+                address: '',
+                openFrom: '',
+                openTo: '',
+                note: '',
+                completed: true,
+                weight: '',
+                time: '',
+                isPause: true,
+                pauseDuration: '45',
+                plads: ''
+            };
+            
+            tours.push(pauseTour);
+            renderTours();
+            updateStats();
+            showToast('Pause tilføjet!');
+        }
+
+        function extractCustomer(facility) {
+            if (!facility) return currentPlads || 'GLOSTRUP';
+            const parts = facility.split(/[,\s]+/);
+            return parts[0] || currentPlads || 'GLOSTRUP';
+        }
+
+        function renderTours() {
+            const container = document.getElementById('toursList');
+            
+            if (tours.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <h3>Ingen ture endnu</h3>
+                        <p>Indsæt ture fra mailen ovenfor</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Tamamlananlar yukarıda, bekleyenler aşağıda, ama adres sıralaması korunuyor
+            const completedTours = tours.filter(t => t.completed || t.isPause);
+            const pendingTours = tours.filter(t => !t.completed && !t.isPause);
+            
+            // Her iki grubu da adreslerine göre sırala
+            const sortedCompleted = sortToursByAddress([...completedTours]);
+            const sortedPending = sortToursByAddress([...pendingTours]);
+            
+            // Birleştir: Önce tamamlananlar (pause dahil), sonra bekleyenler
+            const sortedTours = [...sortedCompleted, ...sortedPending];
+
+            container.innerHTML = sortedTours.map(tour => {
+                if (tour.isPause) {
+                    return `
+                        <div class="tour-card pause" data-id="${tour.id}">
+                            <div class="tour-header">
+                                <div class="tour-info">
+                                    <h3>☕ PAUSE</h3>
+                                </div>
+                                <span class="badge badge-pause">PAUSE</span>
+                            </div>
+                            <div class="tour-actions">
+                                <div class="form-group">
+                                    <label>Varighed (min)</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           value="${tour.pauseDuration || '45'}"
+                                           onchange="updatePauseDuration(${tour.id}, this.value)">
+                                </div>
+                                <div class="form-group">
+                                    <label>Tidspunkt</label>
+                                    <input type="time" 
+                                           class="form-control" 
+                                           value="${tour.time}"
+                                           onchange="updateTime(${tour.id}, this.value)">
+                                </div>
+                                <div></div>
+                                <button class="btn btn-warning" onclick="removeTour(${tour.id})">
+                                    🗑️
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                    <div class="tour-card ${tour.completed ? 'completed' : 'pending'}" data-id="${tour.id}">
+                        <div class="tour-header">
+                            <div class="tour-info">
+                                <h3>🏭 ${tour.facility}</h3>
+                                <div class="tour-meta">
+                                    <span>📦 Container: ${tour.container}</span>
+                                    <span>📍 ${tour.address}</span>
+                                    <span>🏷️ ${tour.fraction}</span>
+                                    ${tour.openFrom ? `<span>🕐 Åben: ${tour.openFrom}-${tour.openTo}</span>` : ''}
+                                    ${tour.note ? `<span>📝 ${tour.note}</span>` : ''}
+                                </div>
+                            </div>
+                            <span class="badge ${tour.completed ? 'badge-completed' : 'badge-pending'}">
+                                ${tour.completed ? '✓ Afsluttet' : '⏳ Afventer'}
+                            </span>
+                        </div>
+                        
+                        <div class="tour-actions">
+                            <div class="form-group">
+                                <label>Vægt (kg)</label>
+                                <input type="number" 
+                                       class="form-control" 
+                                       placeholder="0" 
+                                       value="${tour.weight}"
+                                       onchange="updateWeight(${tour.id}, this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label>Ankomsttid</label>
+                                <input type="time" 
+                                       class="form-control" 
+                                       value="${tour.time}"
+                                       onchange="updateTime(${tour.id}, this.value)">
+                            </div>
+                            <div class="form-group">
+                                <label>Plads</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       value="${tour.plads || currentPlads}"
+                                       onchange="updateTourPlads(${tour.id}, this.value)"
+                                       placeholder="Plads">
+                            </div>
+                            <button class="btn ${tour.completed ? 'btn-secondary' : 'btn-success'}" 
+                                    onclick="toggleComplete(${tour.id})"
+                                    style="height: fit-content;">
+                                ${tour.completed ? '↩️ Fortryd' : '✓ Afslut'}
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateWeight(id, weight) {
+            const tour = tours.find(t => t.id === id);
+            if (tour) {
+                tour.weight = weight;
+                if (weight && !tour.time) {
+                    const now = new Date();
+                    tour.time = now.toTimeString().slice(0, 5);
+                }
+                renderTours();
+                updateStats();
+                showToast('Vægt opdateret!');
+            }
+        }
+
+        function updateTime(id, time) {
+            const tour = tours.find(t => t.id === id);
+            if (tour) {
+                tour.time = time;
+                updateStats();
+                calculateTotalTime();
+            }
+        }
+
+        function updatePauseDuration(id, duration) {
+            const tour = tours.find(t => t.id === id);
+            if (tour) {
+                tour.pauseDuration = duration;
+                calculateTotalTime();
+            }
+        }
+
+        function updateTourPlads(id, plads) {
+            const tour = tours.find(t => t.id === id);
+            if (tour) {
+                tour.plads = plads;
+            }
+        }
+
+        function toggleComplete(id) {
+            const tour = tours.find(t => t.id === id);
+            if (tour) {
+                tour.completed = !tour.completed;
+                
+                if (tour.completed && !tour.time) {
+                    const now = new Date();
+                    tour.time = now.toTimeString().slice(0, 5);
+                }
+                
+                // Tekrar sırala - tamamlananlar yukarı
+                renderTours();
+                updateStats();
+                calculateTotalTime();
+                showToast(tour.completed ? 'Tur afsluttet!' : 'Tur åbnet igen!');
+            }
+        }
+
+        function removeTour(id) {
+            if (confirm('Slet denne pause?')) {
+                tours = tours.filter(t => t.id !== id);
+                renderTours();
+                updateStats();
+                calculateTotalTime();
+            }
+        }
+
+        function calculateTotalTime() {
+            const startTime = document.getElementById('startTime').value;
+            const endTime = document.getElementById('endTime').value;
+            
+            if (!startTime || !endTime) {
+                document.getElementById('timeDisplay').textContent = '0t 0m';
+                return;
+            }
+
+            const start = new Date(`2000-01-01T${startTime}`);
+            const end = new Date(`2000-01-01T${endTime}`);
+            
+            let diffMs = end - start;
+            if (diffMs < 0) diffMs += 24 * 60 * 60 * 1000; // Gece yarısı geçişi
+            
+            // Pause sürelerini çıkar
+            const pauseMinutes = tours
+                .filter(t => t.isPause)
+                .reduce((sum, t) => sum + (parseInt(t.pauseDuration) || 0), 0);
+            
+            diffMs -= pauseMinutes * 60 * 1000;
+            
+            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+            
+            document.getElementById('timeDisplay').textContent = `${hours}t ${minutes}m`;
+            
+            return { hours, minutes, totalMinutes: (hours * 60 + minutes) };
+        }
+
+        function updateStats() {
+            const total = tours.filter(t => !t.isPause).length;
+            const completed = tours.filter(t => t.completed && !t.isPause).length;
+            const pending = total - completed;
+            const totalWeight = tours
+                .filter(t => t.completed && !t.isPause && t.weight)
+                .reduce((sum, t) => sum + (parseFloat(t.weight) || 0), 0);
+
+            document.getElementById('totalTours').textContent = total;
+            document.getElementById('completedTours').textContent = completed;
+            document.getElementById('pendingTours').textContent = pending;
+            document.getElementById('totalWeight').textContent = totalWeight.toLocaleString('da-DK');
+            
+            const timeCalc = calculateTotalTime();
+            if (timeCalc) {
+                document.getElementById('totalTime').textContent = `${timeCalc.hours}t`;
+            }
+        }
+
+        function clearAll() {
+            if (confirm('Slet alle ture? Dette kan ikke fortrydes.')) {
+                tours = [];
+                tourIdCounter = 1;
+                localStorage.removeItem('korkman2_tours');
+                renderTours();
+                updateStats();
+                calculateTotalTime();
+                showToast('Alle data slettet!');
+            }
+        }
+
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            
+            const driverName = document.getElementById('driverName').value || 'Ferdat Turan';
+            const vehicleReg = document.getElementById('vehicleReg').value || 'EC25026';
+            const startTime = document.getElementById('startTime').value || '07:00';
+            const endTime = document.getElementById('endTime').value || '';
+            const timeCalc = calculateTotalTime();
+            const totalTimeStr = timeCalc ? `${timeCalc.hours}t ${timeCalc.minutes}m` : '';
+            
+            // Logo alanı
+            doc.setFillColor(220, 38, 38);
+            doc.rect(20, 15, 60, 20, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text('KORKMAN2', 25, 28);
+            
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('ILK Company ApS', 25, 33);
+            
+            // Kørselsrapport başlığı
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(18);
+            doc.setFont('helvetica', 'bold');
+            doc.text('KØRSELSRAPPORT', 120, 25);
+            
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+            const today = new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' });
+            doc.text(`Dato: ${today}`, 120, 32);
+            
+            // Bilgi tablosu - tam olarak örnekteki gibi
+            const infoData = [
+                [
+                    { content: 'CHAUFFØR NAVN', styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } },
+                    { content: driverName, styles: { fontStyle: 'italic' } },
+                    { content: 'VOGN NR. /REG.NR.', styles: { fillColor: [240, 240, 240], fontStyle: 'bold', textColor: [0, 150, 0] } },
+                    { content: vehicleReg, styles: { textColor: [0, 150, 0], fontStyle: 'bold' } }
+                ],
+                [
+                    { content: 'START TID', styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } },
+                    { content: startTime, styles: { textColor: [0, 150, 0], fontStyle: 'bold' } },
+                    { content: 'SLUT TID', styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } },
+                    { content: endTime, styles: { textColor: [0, 150, 0], fontStyle: 'bold' } }
+                ],
+                [
+                    { content: 'PLADS', styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } },
+                    { content: currentPlads || '-', styles: {} },
+                    { content: 'TID I ALT', styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } },
+                    { content: totalTimeStr, styles: { textColor: [200, 0, 0], fontStyle: 'bold' } }
+                ]
+            ];
+            
+            doc.autoTable({
+                startY: 40,
+                body: infoData,
+                theme: 'grid',
+                styles: { 
+                    fontSize: 10,
+                    cellPadding: 5,
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.5,
+                    valign: 'middle'
+                },
+                columnStyles: {
+                    0: { cellWidth: 40 },
+                    1: { cellWidth: 55 },
+                    2: { cellWidth: 35 },
+                    3: { cellWidth: 40 }
+                }
+            });
+            
+            // Tur tablosu başlıkları - sarı/oranj arka plan
+            const completedTours = tours.filter(t => (t.completed || t.isPause) && !t.isPause);
+            const pauseTours = tours.filter(t => t.isPause);
+            
+            // Pause satırını ekle
+            let tableBody = [];
+            
+            // Önce plads başlığı
+            if (currentPlads) {
+                tableBody.push([
+                    { content: currentPlads.toUpperCase(), colSpan: 6, styles: { fillColor: [254, 243, 199], fontStyle: 'bold', textColor: [180, 83, 9], fontSize: 11 } }
+                ]);
+            }
+            
+            // Normal turlar
+            completedTours.forEach(tour => {
+                // Aynı adresteki turları grupla
+                tableBody.push([
+                    tour.plads || currentPlads || 'GLOSTRUP',
+                    tour.facility.split(',')[0],
+                    tour.container,
+                    tour.weight ? `${tour.weight} kg` : '',
+                    tour.time || '',
+                    ''
+                ]);
+            });
+            
+            // Pause satırı
+            pauseTours.forEach(pause => {
+                tableBody.push([
+                    { content: 'PAUSE 45', colSpan: 1, styles: { fillColor: [220, 252, 231], fontStyle: 'bold' } },
+                    { content: '', colSpan: 2, styles: { fillColor: [220, 252, 231] } },
+                    { content: '', styles: { fillColor: [220, 252, 231] } },
+                    { content: pause.time || '', styles: { fillColor: [220, 252, 231] } },
+                    { content: '', styles: { fillColor: [220, 252, 231] } }
+                ]);
+            });
+            
+            // Kalan boş satırlar (örnekteki gibi)
+            for (let i = tableBody.length; i < 15; i++) {
+                tableBody.push(['', '', '', '', '', '']);
+            }
+            
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 5,
+                head: [['KUNDE', 'AFLÆS. STED', 'CONTAINE', 'VÆGT', 'TIL', 'NETPÅ']],
+                body: tableBody,
+                theme: 'grid',
+                headStyles: { 
+                    fillColor: [251, 191, 36],
+                    textColor: [0, 0, 0],
+                    fontStyle: 'bold',
+                    fontSize: 10
+                },
+                styles: {
+                    fontSize: 9,
+                    cellPadding: 4,
+                    lineColor: [0, 0, 0],
+                    lineWidth: 0.5,
+                    valign: 'middle'
+                },
+                columnStyles: {
+                    0: { cellWidth: 30 },
+                    1: { cellWidth: 50 },
+                    2: { cellWidth: 25 },
+                    3: { cellWidth: 25, fillColor: [220, 252, 231] },
+                    4: { cellWidth: 20, fillColor: [240, 240, 240] },
+                    5: { cellWidth: 20 }
+                },
+                alternateRowStyles: {
+                    fillColor: [255, 255, 255]
+                },
+                didParseCell: function(data) {
+                    // Kırmızı satır işaretlemesi (Udendørs Træ gibi)
+                    if (data.row.raw && data.row.raw[1] && data.row.raw[1].includes('Solum')) {
+                        data.cell.styles.fillColor = [254, 226, 226];
+                    }
+                }
+            });
+            
+            // Alt not kutusu
+            const finalY = doc.lastAutoTable.finalY + 5;
+            doc.setDrawColor(200, 0, 0);
+            doc.setLineWidth(0.5);
+            doc.rect(20, finalY, 170, 15);
+            
+            doc.setFontSize(9);
+            doc.setTextColor(200, 0, 0);
+            doc.text('Container med rød mærke bestilling af samme dag', 25, finalY + 9);
+            
+            // Kaydet
+            doc.save(`Korselsrapport_${new Date().toISOString().split('T')[0]}.pdf`);
+            showToast('PDF rapport genereret!');
+        }
+    </script>
+</body>
+</html>
