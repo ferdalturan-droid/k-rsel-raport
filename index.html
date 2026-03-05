@@ -710,39 +710,100 @@
             const lines = text.split('\n').filter(l => l.trim());
             let added = 0;
             
+            // Known facilities to match
+            const knownFacilities = ['Solum', 'Stena', 'Vestforbrænding', 'Verdis', 'HCS', 'Damifo', 'Ragn-Sells', 'Norrecco', 'Remondis', 'Marius Pedersen'];
+            
             lines.forEach(line => {
                 // Clean up the line
                 const cleanLine = line.replace(/\s+/g, ' ').trim();
                 
-                // Try to find patterns
-                const parts = cleanLine.split(' ').filter(p => p.length > 0);
+                // Split by tab or multiple spaces
+                let parts = cleanLine.split('\t').map(p => p.trim()).filter(p => p);
+                if (parts.length < 4) {
+                    parts = cleanLine.split(/\s{2,}/).map(p => p.trim()).filter(p => p);
+                }
                 
-                if (parts.length >= 4) {
-                    // Check if first part is date
-                    const hasDate = /^\d{2}[-/.]\d{2}[-/.]\d{2,4}/.test(parts[0]);
+                if (parts.length >= 5) {
+                    // Try to identify each part
+                    let date = '';
+                    let container = '';
+                    let fraction = '';
+                    let facility = '';
+                    let address = '';
                     
-                    let date, container, fraction, facility, address;
-                    
-                    if (hasDate) {
-                        // Format: 04-03-2026 93588 Pap Tømning Stena Address
+                    // Check first part for date
+                    let startIndex = 0;
+                    if (/^\d{2}[-/.]\d{2}[-/.]\d{2,4}/.test(parts[0])) {
                         date = parts[0];
-                        container = parts[1] || '';
-                        fraction = parts[2] || '';
-                        // Skip "Tømning" if present
-                        let facilityIndex = 3;
-                        if (parts[3] && (parts[3].toLowerCase() === 'tømning' || parts[3].toLowerCase() === 'tomning')) {
-                            facilityIndex = 4;
-                        }
-                        facility = parts[facilityIndex] || '';
-                        address = parts.slice(facilityIndex + 1).join(' ') || '';
+                        startIndex = 1;
                     } else {
-                        // Format without date
                         date = document.getElementById('reportDate').value;
-                        fraction = parts[0] || '';
-                        facility = parts[1] || '';
-                        container = parts.find(p => p.match(/^\d{3,}/)) || '';
-                        address = parts.slice(2).join(' ') || '';
                     }
+                    
+                    // Container is usually a number after date
+                    if (parts[startIndex] && /^\d{3,}$/.test(parts[startIndex])) {
+                        container = parts[startIndex];
+                        startIndex++;
+                    }
+                    
+                    // Find facility by matching known names
+                    let facilityIndex = -1;
+                    for (let i = startIndex; i < parts.length; i++) {
+                        const partLower = parts[i].toLowerCase();
+                        for (const fac of knownFacilities) {
+                            if (partLower.includes(fac.toLowerCase())) {
+                                facility = fac;
+                                facilityIndex = i;
+                                break;
+                            }
+                        }
+                        if (facilityIndex !== -1) break;
+                    }
+                    
+                    // If no known facility found, guess based on position
+                    if (facilityIndex === -1 && parts.length > startIndex + 2) {
+                        // Skip "Tømning" or similar
+                        if (parts[startIndex + 1] && ['tømning', 'tomning', 'afhentning'].includes(parts[startIndex + 1].toLowerCase())) {
+                            facility = parts[startIndex + 2] || '';
+                            facilityIndex = startIndex + 2;
+                        } else {
+                            facility = parts[startIndex + 1] || '';
+                            facilityIndex = startIndex + 1;
+                        }
+                    }
+                    
+                    // Fraction is before facility
+                    if (facilityIndex > startIndex) {
+                        fraction = parts[startIndex] || '';
+                        // If there are parts between fraction and facility, add to fraction
+                        for (let i = startIndex + 1; i < facilityIndex; i++) {
+                            if (!['tømning', 'tomning', 'afhentning'].includes(parts[i].toLowerCase())) {
+                                fraction += ' ' + parts[i];
+                            }
+                        }
+                    }
+                    
+                    // Address is everything after facility
+                    if (facilityIndex !== -1 && facilityIndex < parts.length - 1) {
+                        // Look for address pattern (usually contains numbers and street name)
+                        const remainingParts = parts.slice(facilityIndex + 1);
+                        
+                        // Find where address starts (usually after facility name, before any time/number at end)
+                        let addressParts = [];
+                        for (const part of remainingParts) {
+                            // Skip if it looks like a time or just numbers at the end
+                            if (/^\d{1,2}:\d{2}$/.test(part)) break;
+                            if (/^\d+$/.test(part) && part.length <= 2) break; // Single/two digits likely time or note
+                            addressParts.push(part);
+                        }
+                        
+                        address = addressParts.join(' ');
+                    }
+                    
+                    // Clean up
+                    fraction = fraction.trim();
+                    facility = facility.trim();
+                    address = address.trim();
                     
                     if (fraction && facility) {
                         tours.push({
@@ -1098,12 +1159,12 @@
                     valign: 'middle'
                 },
                 columnStyles: {
-                    0: { cellWidth: 32 },  // Fraktion - wider for long names
-                    1: { cellWidth: 32 },  // Aflæs.sted
-                    2: { cellWidth: 44 },  // Adresse
-                    3: { cellWidth: 18 },  // Cont.
-                    4: { cellWidth: 18, halign: 'right' },  // Vægt
-                    5: { cellWidth: 16, halign: 'center' }   // Til
+                    0: { cellWidth: 32 },
+                    1: { cellWidth: 32 },
+                    2: { cellWidth: 44 },
+                    3: { cellWidth: 18 },
+                    4: { cellWidth: 18, halign: 'right' },
+                    5: { cellWidth: 16, halign: 'center' }
                 }
             });
             
