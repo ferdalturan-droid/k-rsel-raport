@@ -7,379 +7,66 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-text-size-adjust: 100%;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #f0f0f0;
-            min-height: 100vh;
-            font-size: 13px;
-        }
-
-        .container {
-            max-width: 100%;
-            background: white;
-            min-height: 100vh;
-        }
-
-        .header {
-            background: #dc2626;
-            color: white;
-            padding: 12px 15px;
-            text-align: center;
-            border-bottom: 2px solid #991b1b;
-        }
-
-        .header h1 {
-            font-size: 1.3rem;
-            font-weight: 800;
-            letter-spacing: 1px;
-        }
-
-        .header .subtitle {
-            font-size: 0.7rem;
-            opacity: 0.9;
-        }
-
-        .main-content {
-            padding: 10px;
-        }
-
-        .section {
-            margin-bottom: 10px;
-            background: white;
-            border: 1px solid #ddd;
-        }
-
-        .section-header {
-            background: #f8f8f8;
-            padding: 8px 12px;
-            border-bottom: 2px solid #dc2626;
-            font-weight: 700;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            color: #333;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.75rem;
-        }
-
-        .data-table th {
-            background: #fbbf24;
-            padding: 6px 4px;
-            text-align: left;
-            font-weight: 700;
-            border: 1px solid #999;
-            font-size: 0.7rem;
-            white-space: nowrap;
-        }
-
-        .data-table td {
-            padding: 4px;
-            border: 1px solid #ccc;
-            vertical-align: middle;
-        }
-
-        .data-table tr:nth-child(even) {
-            background: #f9f9f9;
-        }
-
-        .data-table tr.completed {
-            background: #dcfce7;
-        }
-
-        .data-table tr.pause {
-            background: #fef3c7;
-        }
-
-        .data-table tr.same-day {
-            background: #fee2e2;
-        }
-
-        .data-table input {
-            width: 100%;
-            border: 1px solid #ddd;
-            padding: 4px;
-            font-size: 0.75rem;
-            border-radius: 3px;
-        }
-
-        .data-table input:focus {
-            outline: none;
-            border-color: #dc2626;
-        }
-
-        .btn-small {
-            padding: 4px 8px;
-            font-size: 0.7rem;
-            border: none;
-            border-radius: 3px;
-            cursor: pointer;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .btn-done {
-            background: #16a34a;
-            color: white;
-        }
-
-        .btn-undo {
-            background: #6b7280;
-            color: white;
-        }
-
-        .btn-remove {
-            background: #dc2626;
-            color: white;
-            padding: 2px 6px;
-        }
-
-        .btn-same-day {
-            background: #dc2626;
-            color: white;
-            font-size: 0.6rem;
-            padding: 2px 4px;
-            border-radius: 2px;
-            margin-left: 4px;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 8px;
-            padding: 8px 12px;
-            border-bottom: 1px solid #eee;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        .form-row label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #666;
-            min-width: 60px;
-        }
-
-        .form-input {
-            flex: 1;
-            min-width: 100px;
-            padding: 6px 8px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            font-size: 0.8rem;
-        }
-
-        .paste-box {
-            width: 100%;
-            min-height: 60px;
-            border: 2px dashed #ccc;
-            padding: 8px;
-            font-size: 0.75rem;
-            resize: vertical;
-            font-family: monospace;
-        }
-
-        .toolbar {
-            display: flex;
-            gap: 6px;
-            padding: 8px 12px;
-            background: #f8f8f8;
-            border-bottom: 1px solid #ddd;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-
-        .btn-primary {
-            background: #dc2626;
-            color: white;
-        }
-
-        .btn-success {
-            background: #16a34a;
-            color: white;
-        }
-
-        .btn-warning {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .btn-info {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .stats-line {
-            display: flex;
-            justify-content: space-around;
-            padding: 10px;
-            background: #1e293b;
-            color: white;
-            font-size: 0.8rem;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.2rem;
-            font-weight: 800;
-            display: block;
-        }
-
-        .time-box {
-            text-align: center;
-            padding: 10px;
-            background: #fef2f2;
-            border-top: 1px solid #dc2626;
-        }
-
-        .time-box .label {
-            font-size: 0.7rem;
-            color: #991b1b;
-            text-transform: uppercase;
-        }
-
-        .time-box .value {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: #dc2626;
-        }
-
-        .plads-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            padding: 8px 12px;
-        }
-
-        .plads-tag {
-            padding: 4px 10px;
-            background: #e5e5e5;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            cursor: pointer;
-            border: 1px solid transparent;
-        }
-
-        .plads-tag.active {
-            background: #dc2626;
-            color: white;
-        }
-
-        .pdf-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: white;
-            padding: 10px;
-            border-top: 2px solid #ddd;
-            text-align: center;
-        }
-
-        .pdf-footer .btn {
-            width: 100%;
-            padding: 12px;
-            font-size: 0.9rem;
-        }
-
-        .content-area {
-            padding-bottom: 70px;
-        }
-
-        .col-fraction { width: 18%; }
-        .col-facility { width: 20%; }
-        .col-address { width: 22%; }
-        .col-container { width: 12%; }
-        .col-weight { width: 10%; }
-        .col-time { width: 10%; }
-        .col-action { width: 8%; }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.65rem;
-            font-weight: 700;
-        }
-
-        .badge-same-day {
-            background: #dc2626;
-            color: white;
-        }
-
-        .toast {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 1000;
-            pointer-events: none;
-        }
-
-        .toast.show {
-            opacity: 1;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .add-tour-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            padding: 10px;
-            background: #f0f9ff;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .add-tour-form input {
-            padding: 6px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            font-size: 0.8rem;
-        }
-
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 0.75rem;
-            grid-column: span 2;
-        }
-
-        .checkbox-label input[type="checkbox"] {
-            width: auto;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-text-size-adjust: 100%; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f5f5; min-height: 100vh; font-size: 14px; }
+        .container { max-width: 100%; background: white; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; padding: 15px; text-align: center; border-bottom: 3px solid #7f1d1d; }
+        .header h1 { font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; }
+        .header .subtitle { font-size: 0.75rem; opacity: 0.9; margin-top: 3px; }
+        .main-content { padding: 12px; }
+        .section { margin-bottom: 12px; background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e5e5e5; }
+        .section-header { background: #f8f9fa; padding: 10px 15px; border-bottom: 2px solid #dc2626; font-weight: 700; font-size: 0.85rem; text-transform: uppercase; color: #495057; display: flex; justify-content: space-between; align-items: center; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+        .data-table th { background: #fbbf24; padding: 8px 6px; text-align: left; font-weight: 700; border: 1px solid #d97706; font-size: 0.75rem; white-space: nowrap; }
+        .data-table td { padding: 6px; border: 1px solid #d1d5db; vertical-align: middle; }
+        .data-table tr:nth-child(even) { background: #f9fafb; }
+        .data-table tr.completed { background: #d1fae5; }
+        .data-table tr.pause { background: #fef3c7; }
+        .data-table tr.same-day { background: #fee2e2; }
+        .data-table input { width: 100%; border: 1px solid #d1d5db; padding: 5px; font-size: 0.8rem; border-radius: 4px; }
+        .data-table input:focus { outline: none; border-color: #dc2626; }
+        .btn-small { padding: 5px 10px; font-size: 0.75rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
+        .btn-done { background: #16a34a; color: white; }
+        .btn-undo { background: #6b7280; color: white; }
+        .btn-remove { background: #dc2626; color: white; padding: 3px 8px; }
+        .badge-same-day { background: #dc2626; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 3px; margin-left: 4px; font-weight: 700; }
+        .form-row { display: flex; gap: 10px; padding: 10px 15px; border-bottom: 1px solid #e5e7eb; align-items: center; flex-wrap: wrap; }
+        .form-row label { font-size: 0.8rem; font-weight: 600; color: #4b5563; min-width: 70px; }
+        .form-input { flex: 1; min-width: 100px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; }
+        .form-input:focus { outline: none; border-color: #dc2626; }
+        .paste-box { width: 100%; min-height: 200px; border: 2px dashed #dc2626; padding: 12px; font-size: 0.8rem; resize: vertical; font-family: monospace; border-radius: 6px; background: #fef2f2; }
+        .toolbar { display: flex; gap: 8px; padding: 12px 15px; background: #f9fafb; border-top: 1px solid #e5e7eb; flex-wrap: wrap; }
+        .btn { padding: 10px 16px; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 700; cursor: pointer; text-transform: uppercase; }
+        .btn-primary { background: #dc2626; color: white; }
+        .btn-success { background: #16a34a; color: white; }
+        .btn-warning { background: #f59e0b; color: white; }
+        .btn-info { background: #3b82f6; color: white; }
+        .stats-line { display: flex; justify-content: space-around; padding: 15px; background: #1e293b; color: white; font-size: 0.85rem; border-radius: 8px; margin-bottom: 12px; }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: 1.4rem; font-weight: 800; display: block; color: #fbbf24; }
+        .time-box { text-align: center; padding: 12px; background: #fef2f2; border-top: 2px solid #dc2626; }
+        .time-box .label { font-size: 0.75rem; color: #991b1b; text-transform: uppercase; font-weight: 700; }
+        .time-box .value { font-size: 1.5rem; font-weight: 800; color: #dc2626; }
+        .plads-tags { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 15px; }
+        .plads-tag { padding: 6px 14px; background: #e5e7eb; border-radius: 20px; font-size: 0.8rem; cursor: pointer; border: 2px solid transparent; font-weight: 600; }
+        .plads-tag.active { background: #dc2626; color: white; border-color: #991b1b; }
+        .pdf-footer { position: fixed; bottom: 0; left: 0; right: 0; background: white; padding: 12px; border-top: 2px solid #e5e7eb; text-align: center; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); }
+        .pdf-footer .btn { width: 100%; padding: 14px; font-size: 1rem; }
+        .content-area { padding-bottom: 80px; }
+        .notes-section { background: #fffbeb; border: 2px solid #f59e0b; }
+        .notes-section .section-header { background: #fbbf24; border-bottom-color: #d97706; }
+        .notes-textarea { width: 100%; min-height: 100px; border: none; padding: 15px; font-size: 0.95rem; resize: vertical; background: transparent; }
+        .notes-hint { padding: 8px 15px; font-size: 0.75rem; color: #92400e; background: #fef3c7; border-top: 1px solid #f59e0b; }
+        .toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.85); color: white; padding: 16px 24px; border-radius: 8px; font-size: 0.9rem; opacity: 0; transition: opacity 0.3s; z-index: 1000; pointer-events: none; }
+        .toast.show { opacity: 1; }
+        .table-wrapper { overflow-x: auto; }
+        .add-tour-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 15px; background: #f0f9ff; }
+        .add-tour-form input { padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.85rem; }
+        .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; grid-column: span 2; }
+        .tour-counter { background: #16a34a; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; }
+        .debug-info { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px; margin: 10px 15px; font-size: 0.75rem; color: #374151; max-height: 200px; overflow-y: auto; }
     </style>
+<base target="_blank">
 </head>
 <body>
     <div class="container">
@@ -389,7 +76,6 @@
         </div>
 
         <div class="main-content">
-            <!-- Stats -->
             <div class="stats-line">
                 <div class="stat-item">
                     <span class="stat-value" id="totalTours">0</span>
@@ -409,20 +95,19 @@
                 </div>
             </div>
 
-            <!-- Chauffør Info -->
             <div class="section">
                 <div class="section-header">Chauffør Information</div>
                 <div class="form-row">
                     <label>Navn:</label>
                     <input type="text" class="form-input" id="driverName" value="Ferdat Turan">
                     <label>Vogn:</label>
-                    <input type="text" class="form-input" id="vehicleReg" value="EC25026" style="width: 80px;">
+                    <input type="text" class="form-input" id="vehicleReg" value="EC25026" style="width: 90px;">
                 </div>
                 <div class="form-row">
                     <label>Start:</label>
-                    <input type="time" class="form-input" id="startTime" value="07:00" onchange="calculateTotalTime()" style="width: 80px;">
+                    <input type="time" class="form-input" id="startTime" value="07:00" onchange="calculateTotalTime()" style="width: 90px;">
                     <label>Slut:</label>
-                    <input type="time" class="form-input" id="endTime" onchange="calculateTotalTime()" style="width: 80px;">
+                    <input type="time" class="form-input" id="endTime" onchange="calculateTotalTime()" style="width: 90px;">
                 </div>
                 <div class="time-box">
                     <div class="label">Total arbejdstid</div>
@@ -430,7 +115,6 @@
                 </div>
             </div>
 
-            <!-- Plads -->
             <div class="section">
                 <div class="section-header">Plads / Område</div>
                 <div class="plads-tags">
@@ -447,88 +131,128 @@
                 </div>
             </div>
 
-            <!-- Mail Input -->
             <div class="section">
                 <div class="section-header">Indsæt ture fra mail</div>
-                <div style="padding: 8px 12px;">
-                    <textarea class="paste-box" id="pasteArea" placeholder="Kopier tabel fra mail og indsæt her..."></textarea>
+                <div style="padding: 12px 15px;">
+                    <textarea class="paste-box" id="pasteArea" placeholder="Kopier ture fra mail her..."></textarea>
                 </div>
+                <div style="padding: 0 15px 10px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #374151;">
+                        <input type="checkbox" id="useLineGrouping" checked style="transform: scale(1.2);">
+                        <strong>Mail formatı</strong> (her kolon ayrı satırda)
+                    </label>
+                </div>
+                <div class="debug-info" id="debugInfo" style="display: none;"></div>
                 <div class="toolbar">
-                    <button class="btn btn-primary" onclick="parsePastedData()">+ Tilføj ture</button>
+                    <button class="btn btn-primary" onclick="parsePastedData()">+ Tilføj alle ture</button>
                     <button class="btn btn-warning" onclick="addPause()">+ Pause</button>
-                    <button class="btn" onclick="clearAll()" style="background: #666; color: white;">Slet alt</button>
+                    <button class="btn" onclick="clearAll()" style="background: #6b7280; color: white;">Slet alt</button>
                 </div>
             </div>
 
-            <!-- Manuel Tur Ekleme -->
             <div class="section">
                 <div class="section-header">Tilføj ny tur manuelt</div>
                 <div class="add-tour-form">
-                    <input type="text" id="manualFraction" placeholder="Fraktion (f.eks. Pap, Metal)">
-                    <input type="text" id="manualFacility" placeholder="Modtageanlæg (f.eks. Stena)">
+                    <input type="text" id="manualFraction" placeholder="Fraktion (f.eks. Beton, Pap)">
+                    <input type="text" id="manualFacility" placeholder="Modtageanlæg (f.eks. Solum)">
                     <input type="text" id="manualAddress" placeholder="Adresse">
                     <input type="text" id="manualContainer" placeholder="Container nr.">
                     <label class="checkbox-label">
-                        <input type="checkbox" id="sameDayOrder"> Samme dags bestilling (rød markering)
+                        <input type="checkbox" id="sameDayOrder"> Samme dags bestilling
                     </label>
                     <button class="btn btn-info" onclick="addManualTour()" style="grid-column: span 2;">Tilføj tur</button>
                 </div>
             </div>
 
-            <!-- Tur Listesi -->
             <div class="section content-area">
-                <div class="section-header">Dagens ture</div>
+                <div class="section-header">
+                    Dagens ture
+                    <span id="tourCountBadge" class="tour-counter">0/20</span>
+                </div>
                 <div class="table-wrapper" id="toursTable">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th class="col-fraction">FRAKTION</th>
-                                <th class="col-facility">AFLÆS. STED</th>
-                                <th class="col-address">ADRESSE</th>
-                                <th class="col-container">CONT.</th>
-                                <th class="col-weight">VÆGT</th>
-                                <th class="col-time">TID</th>
-                                <th class="col-action">OK</th>
+                                <th style="width: 20%;">FRAKTION</th>
+                                <th style="width: 25%;">AFLÆS. STED</th>
+                                <th style="width: 30%;">ADRESSE</th>
+                                <th style="width: 10%;">VÆGT</th>
+                                <th style="width: 8%;">TID</th>
+                                <th style="width: 7%;">OK</th>
                             </tr>
                         </thead>
                         <tbody id="toursBody">
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 30px; color: #999;">
-                                    Ingen ture endnu
-                                </td>
+                                <td colspan="6" style="text-align: center; padding: 40px; color: #9ca3af;">Ingen ture endnu</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            <div class="section notes-section">
+                <div class="section-header">Noter / Bemærkninger</div>
+                <textarea class="notes-textarea" id="notesText" placeholder="Skriv noter her..." maxlength="500" oninput="updateCharCount()"></textarea>
+                <div class="notes-hint">
+                    <span id="charCount">0</span>/500 tegn
+                </div>
+            </div>
         </div>
 
         <div class="pdf-footer">
-            <button class="btn btn-success" onclick="generatePDF()">
-                📄 Generer PDF Rapport
-            </button>
+            <button class="btn btn-success" onclick="generatePDF()">📄 Generer PDF</button>
         </div>
     </div>
 
     <div class="toast" id="toast"></div>
 
     <script>
-        let tours = JSON.parse(localStorage.getItem('korkman2_tours')) || [];
-        let tourIdCounter = tours.length > 0 ? Math.max(...tours.map(t => t.id)) + 1 : 1;
+        'use strict';
+
+        let tours = [];
+        let tourIdCounter = 1;
         let currentPlads = '';
 
+        function loadData() {
+            try {
+                const saved = localStorage.getItem('korkman2_tours');
+                const counter = localStorage.getItem('korkman2_counter');
+                const plads = localStorage.getItem('korkman2_plads');
+                const notes = localStorage.getItem('korkman2_notes');
+
+                if (saved) tours = JSON.parse(saved);
+                if (counter) tourIdCounter = parseInt(counter);
+                if (plads) {
+                    currentPlads = plads;
+                    document.querySelectorAll('.plads-tag').forEach(t => {
+                        if (t.textContent === plads) t.classList.add('active');
+                    });
+                }
+                if (notes) document.getElementById('notesText').value = notes;
+            } catch (e) { console.error(e); }
+        }
+
+        function saveData() {
+            localStorage.setItem('korkman2_tours', JSON.stringify(tours));
+            localStorage.setItem('korkman2_counter', tourIdCounter);
+            localStorage.setItem('korkman2_plads', currentPlads);
+            localStorage.setItem('korkman2_notes', document.getElementById('notesText').value);
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            updateCharCount();
             renderTours();
             updateStats();
             calculateTotalTime();
-            setInterval(() => localStorage.setItem('korkman2_tours', JSON.stringify(tours)), 5000);
+            setInterval(saveData, 2000);
         });
 
         function showToast(msg) {
             const t = document.getElementById('toast');
             t.textContent = msg;
             t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 2000);
+            setTimeout(() => t.classList.remove('show'), 3000);
         }
 
         function setPlads(p) {
@@ -537,28 +261,170 @@
                 t.classList.toggle('active', t.textContent === p);
             });
             document.getElementById('customPlads').value = '';
+            saveData();
         }
 
-        function sortByAddress(list) {
-            return list.sort((a, b) => (a.address || '').localeCompare(b.address || ''));
+        function updateCharCount() {
+            document.getElementById('charCount').textContent = document.getElementById('notesText').value.length;
+        }
+
+        function updateTourCounter() {
+            const count = tours.filter(t => !t.isPause).length;
+            document.getElementById('tourCountBadge').textContent = count + '/20';
+            document.getElementById('tourCountBadge').style.background = count >= 20 ? '#dc2626' : (count >= 15 ? '#f59e0b' : '#16a34a');
         }
 
         function parsePastedData() {
             const text = document.getElementById('pasteArea').value.trim();
-            if (!text) return showToast('Indsæt data først!');
+            const debugInfo = document.getElementById('debugInfo');
+            const useLineGrouping = document.getElementById('useLineGrouping').checked;
+
+            if (!text) {
+                showToast('Indsæt data først!');
+                return;
+            }
+
+            debugInfo.style.display = 'block';
+            debugInfo.innerHTML = 'Analyserer...<br>';
 
             let added = 0;
-            text.split('\n').filter(l => l.trim()).forEach(line => {
-                const cells = line.split(/\t|,{2,}|  +/).map(c => c.trim()).filter(c => c);
-                if (cells.length >= 6) {
+
+            if (useLineGrouping) {
+                added = parseSmartLineGrouping(text, debugInfo);
+            } else {
+                added = parseNormalData(text, debugInfo);
+            }
+
+            if (added > 0) {
+                document.getElementById('pasteArea').value = '';
+                sortAndGroupTours();
+                renderTours();
+                updateStats();
+                updateTourCounter();
+                saveData();
+                showToast(`${added} ture tilføjet!`);
+                debugInfo.innerHTML += `<strong style="color: green;">✓ ${added} ture tilføjet!</strong>`;
+            } else {
+                showToast('Ingen ture fundet!');
+                debugInfo.innerHTML += '<strong style="color: red;">✗ Ingen ture tilføjet</strong>';
+            }
+        }
+
+        // AKILLI PARSE - Tarih ile başlayan satırları bulur
+        function parseSmartLineGrouping(text, debugInfo) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            let added = 0;
+
+            debugInfo.innerHTML += `${lines.length} linjer fundet<br>`;
+
+            // Tarih ile başlayan satırların indekslerini bul
+            const datePattern = /^\d{1,2}[-/]\d{2}[-/]\d{4}$/;
+            const tourStartIndices = [];
+
+            for (let i = 0; i < lines.length; i++) {
+                if (datePattern.test(lines[i])) {
+                    tourStartIndices.push(i);
+                }
+            }
+
+            debugInfo.innerHTML += `${tourStartIndices.length} ture fundet<br>`;
+
+            // Her turu işle
+            for (let i = 0; i < tourStartIndices.length; i++) {
+                if (tours.filter(t => !t.isPause).length >= 20) {
+                    debugInfo.innerHTML += 'Max 20 ture nået!<br>';
+                    break;
+                }
+
+                const startIdx = tourStartIndices[i];
+                const endIdx = (i + 1 < tourStartIndices.length) ? tourStartIndices[i + 1] : lines.length;
+                const tourLines = lines.slice(startIdx, endIdx);
+
+                if (tourLines.length < 5) {
+                    debugInfo.innerHTML += `For få linjer i tur ${i+1}: ${tourLines.length}<br>`;
+                    continue;
+                }
+
+                // Verileri çıkar
+                const date = tourLines[0];
+                const container = tourLines[1] || '';
+                const fraction = tourLines[2] || '';
+                const transportType = tourLines[3] || '';
+                const facility = tourLines[4] || '';
+                const address = tourLines[5] || '';
+
+                if (!fraction || !facility) {
+                    debugInfo.innerHTML += `Mangler data i tur ${i+1}<br>`;
+                    continue;
+                }
+
+                // Aynı tur kontrolü
+                const exists = tours.some(t => 
+                    !t.isPause && 
+                    t.fraction === fraction && 
+                    t.facility === facility && 
+                    t.address === address
+                );
+
+                if (!exists) {
                     tours.push({
                         id: tourIdCounter++,
-                        date: cells[0] || new Date().toLocaleDateString('da-DK'),
-                        container: cells[1] || '',
-                        fraction: cells[2] || '',
-                        facility: cells[4] || '',
-                        address: cells[5] || '',
-                        note: cells[8] || '',
+                        date: date,
+                        container: container,
+                        fraction: fraction,
+                        facility: facility,
+                        address: address,
+                        completed: false,
+                        weight: '',
+                        time: '',
+                        isPause: false,
+                        isSameDay: false,
+                        plads: currentPlads
+                    });
+                    added++;
+                    debugInfo.innerHTML += `✓ ${fraction.substring(0, 25)}<br>`;
+                } else {
+                    debugInfo.innerHTML += `○ Eksisterer: ${fraction.substring(0, 20)}...<br>`;
+                }
+            }
+
+            return added;
+        }
+
+        function parseNormalData(text, debugInfo) {
+            const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+            let added = 0;
+
+            for (let line of lines) {
+                if (tours.filter(t => !t.isPause).length >= 20) break;
+
+                if (!/^\d{1,2}[-/]\d{2}[-/]\d{4}/.test(line)) continue;
+
+                const parts = line.split(/\s+/);
+                if (parts.length < 6) continue;
+
+                const date = parts[0];
+                const container = parts[1];
+                const fraction = parts[2];
+                const facility = parts.slice(4, 6).join(' ');
+                const address = parts.slice(6, 9).join(' ');
+
+                if (!fraction || !facility) continue;
+
+                const exists = tours.some(t => 
+                    !t.isPause && 
+                    t.fraction === fraction && 
+                    t.facility === facility
+                );
+
+                if (!exists) {
+                    tours.push({
+                        id: tourIdCounter++,
+                        date: date,
+                        container: container,
+                        fraction: fraction,
+                        facility: facility,
+                        address: address,
                         completed: false,
                         weight: '',
                         time: '',
@@ -568,36 +434,48 @@
                     });
                     added++;
                 }
-            });
-
-            if (added) {
-                tours = sortByAddress(tours);
-                document.getElementById('pasteArea').value = '';
-                renderTours();
-                updateStats();
-                showToast(`${added} ture tilføjet!`);
             }
+
+            return added;
+        }
+
+        function sortAndGroupTours() {
+            tours.sort((a, b) => {
+                if (a.isPause && !b.isPause) return 1;
+                if (!a.isPause && b.isPause) return -1;
+
+                const groupA = (a.fraction + '|' + a.facility).toLowerCase();
+                const groupB = (b.fraction + '|' + b.facility).toLowerCase();
+
+                if (groupA !== groupB) return groupA.localeCompare(groupB);
+                return (a.address || '').localeCompare(b.address || '');
+            });
         }
 
         function addManualTour() {
-            const fraction = document.getElementById('manualFraction').value;
-            const facility = document.getElementById('manualFacility').value;
-            const address = document.getElementById('manualAddress').value;
-            const container = document.getElementById('manualContainer').value;
+            if (tours.filter(t => !t.isPause).length >= 20) {
+                showToast('Maksimum 20 ture!');
+                return;
+            }
+
+            const fraction = document.getElementById('manualFraction').value.trim();
+            const facility = document.getElementById('manualFacility').value.trim();
+            const address = document.getElementById('manualAddress').value.trim();
+            const container = document.getElementById('manualContainer').value.trim();
             const isSameDay = document.getElementById('sameDayOrder').checked;
 
             if (!fraction || !facility) {
-                return showToast('Udfyld fraktion og modtageanlæg!');
+                showToast('Udfyld fraktion og modtageanlæg!');
+                return;
             }
 
             tours.push({
                 id: tourIdCounter++,
                 date: new Date().toLocaleDateString('da-DK'),
-                container: container || '-',
+                container: container || '',
                 fraction: fraction,
                 facility: facility,
-                address: address || '-',
-                note: isSameDay ? 'Samme dags bestilling' : '',
+                address: address || '',
                 completed: false,
                 weight: '',
                 time: '',
@@ -606,16 +484,16 @@
                 plads: currentPlads
             });
 
-            // Clear inputs
-            document.getElementById('manualFraction').value = '';
-            document.getElementById('manualFacility').value = '';
-            document.getElementById('manualAddress').value = '';
-            document.getElementById('manualContainer').value = '';
+            ['manualFraction', 'manualFacility', 'manualAddress', 'manualContainer'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
             document.getElementById('sameDayOrder').checked = false;
 
-            tours = sortByAddress(tours);
+            sortAndGroupTours();
             renderTours();
             updateStats();
+            updateTourCounter();
+            saveData();
             showToast('Tur tilføjet!');
         }
 
@@ -635,51 +513,71 @@
                 isSameDay: false,
                 plads: ''
             });
+            sortAndGroupTours();
             renderTours();
             updateStats();
+            saveData();
             showToast('Pause tilføjet!');
         }
 
         function renderTours() {
             const tbody = document.getElementById('toursBody');
             if (!tours.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; color: #999;">Ingen ture endnu</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #9ca3af;">Ingen ture endnu</td></tr>';
+                updateTourCounter();
                 return;
             }
 
-            const completed = tours.filter(t => t.completed || t.isPause);
-            const pending = tours.filter(t => !t.completed && !t.isPause);
-            const sorted = [...sortByAddress(completed), ...sortByAddress(pending)];
+            let lastGroup = '';
+            let html = '';
 
-            tbody.innerHTML = sorted.map(t => {
-                const sameDayBadge = t.isSameDay ? '<span class="badge badge-same-day">SAMME DAG</span>' : '';
-                
+            const sorted = [...tours].sort((a, b) => {
+                if (a.isPause && !b.isPause) return 1;
+                if (!a.isPause && b.isPause) return -1;
+                if (a.completed !== b.completed) return b.completed ? 1 : -1;
+
+                const groupA = (a.fraction + '|' + a.facility).toLowerCase();
+                const groupB = (b.fraction + '|' + b.facility).toLowerCase();
+                if (groupA !== groupB) return groupA.localeCompare(groupB);
+                return (a.address || '').localeCompare(b.address || '');
+            });
+
+            sorted.forEach(t => {
                 if (t.isPause) {
-                    return `<tr class="pause">
+                    html += `<tr class="pause">
                         <td colspan="2"><strong>☕ PAUSE ${t.pauseDuration} min</strong></td>
-                        <td>-</td>
                         <td>-</td>
                         <td>-</td>
                         <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
                         <td><button class="btn-small btn-remove" onclick="removeTour(${t.id})">🗑️</button></td>
                     </tr>`;
+                    return;
                 }
 
-                return `<tr class="${t.completed ? 'completed' : ''} ${t.isSameDay ? 'same-day' : ''}">
+                const currentGroup = t.fraction + '|' + t.facility;
+                const showGroupHeader = currentGroup !== lastGroup && lastGroup !== '';
+                lastGroup = currentGroup;
+
+                const sameDayBadge = t.isSameDay ? '<span class="badge-same-day">SAMME DAG</span>' : '';
+
+                html += `<tr class="${t.completed ? 'completed' : ''} ${t.isSameDay ? 'same-day' : ''}" ${showGroupHeader ? 'style="border-top: 2px solid #dc2626;"' : ''}>
                     <td>${t.fraction} ${sameDayBadge}</td>
                     <td>${t.facility}</td>
                     <td>${t.address}</td>
-                    <td>${t.container}</td>
-                    <td><input type="number" placeholder="0" value="${t.weight}" onchange="updateWeight(${t.id}, this.value)" style="width: 60px;"></td>
+                    <td><input type="number" value="${t.weight}" onchange="updateWeight(${t.id}, this.value)" style="width: 60px;" placeholder="kg"></td>
                     <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
                     <td>
                         ${t.completed 
                             ? `<button class="btn-small btn-undo" onclick="toggleComplete(${t.id})">↩️</button>`
                             : `<button class="btn-small btn-done" onclick="toggleComplete(${t.id})">✓</button>`
                         }
+                        <button class="btn-small btn-remove" onclick="removeTour(${t.id})" style="margin-left: 4px;">🗑️</button>
                     </td>
                 </tr>`;
-            }).join('');
+            });
+
+            tbody.innerHTML = html;
+            updateTourCounter();
         }
 
         function updateWeight(id, w) {
@@ -688,6 +586,7 @@
                 t.weight = w;
                 if (w && !t.time) t.time = new Date().toTimeString().slice(0, 5);
                 updateStats();
+                saveData();
             }
         }
 
@@ -696,6 +595,7 @@
             if (t) {
                 t.time = time;
                 calculateTotalTime();
+                saveData();
             }
         }
 
@@ -707,29 +607,36 @@
                 renderTours();
                 updateStats();
                 calculateTotalTime();
+                saveData();
             }
         }
 
         function removeTour(id) {
+            if (!confirm('Slet denne tur?')) return;
             tours = tours.filter(t => t.id !== id);
             renderTours();
             updateStats();
             calculateTotalTime();
+            saveData();
         }
 
         function calculateTotalTime() {
             const s = document.getElementById('startTime').value;
             const e = document.getElementById('endTime').value;
-            if (!s || !e) return document.getElementById('timeDisplay').textContent = '0t 0m';
 
-            let diff = new Date(`2000-01-01T${e}`) - new Date(`2000-01-01T${s}`);
-            if (diff < 0) diff += 24 * 60 * 60 * 1000;
-            
-            const pauseMin = tours.filter(t => t.isPause).reduce((sum, t) => sum + (parseInt(t.pauseDuration) || 0), 0);
-            diff -= pauseMin * 60 * 1000;
-            
-            const h = Math.floor(diff / (1000 * 60 * 60));
-            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            let h = 0, m = 0;
+
+            if (s && e) {
+                let diff = new Date(`2000-01-01T${e}`) - new Date(`2000-01-01T${s}`);
+                if (diff < 0) diff += 24 * 60 * 60 * 1000;
+
+                const pauseMin = tours.filter(t => t.isPause).reduce((sum, t) => sum + (parseInt(t.pauseDuration) || 0), 0);
+                diff -= pauseMin * 60 * 1000;
+
+                h = Math.floor(diff / (1000 * 60 * 60));
+                m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            }
+
             document.getElementById('timeDisplay').textContent = `${h}t ${m}m`;
             return { h, m };
         }
@@ -738,147 +645,152 @@
             const total = tours.filter(t => !t.isPause).length;
             const done = tours.filter(t => t.completed && !t.isPause).length;
             const w = tours.filter(t => t.completed && !t.isPause && t.weight).reduce((s, t) => s + (parseFloat(t.weight) || 0), 0);
-            
+
             document.getElementById('totalTours').textContent = total;
             document.getElementById('completedTours').textContent = done;
             document.getElementById('totalWeight').textContent = w.toLocaleString('da-DK');
-            
+
             const t = calculateTotalTime();
-            if (t) document.getElementById('totalTime').textContent = `${t.h}t`;
+            document.getElementById('totalTime').textContent = `${t.h}t`;
         }
 
         function clearAll() {
-            if (confirm('Slet alle ture?')) {
-                tours = [];
-                tourIdCounter = 1;
-                localStorage.removeItem('korkman2_tours');
-                renderTours();
-                updateStats();
-                showToast('Alt slettet!');
-            }
+            if (!confirm('Slet ALLE ture?')) return;
+            tours = [];
+            tourIdCounter = 1;
+            localStorage.clear();
+            document.getElementById('notesText').value = '';
+            document.getElementById('debugInfo').style.display = 'none';
+            updateCharCount();
+            renderTours();
+            updateStats();
+            showToast('Alt slettet!');
         }
 
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
-            
+
             const driver = document.getElementById('driverName').value || 'Ferdat Turan';
             const vehicle = document.getElementById('vehicleReg').value || 'EC25026';
             const start = document.getElementById('startTime').value || '07:00';
             const end = document.getElementById('endTime').value || '';
             const time = calculateTotalTime();
-            
+            const notes = document.getElementById('notesText').value || '';
+
             // Header
             doc.setFillColor(220, 38, 38);
-            doc.rect(20, 15, 50, 18, 'F');
+            doc.rect(0, 0, 210, 22, 'F');
+
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
-            doc.text('KORKMAN2', 23, 27);
+            doc.text('KORKMAN2', 15, 12);
             doc.setFontSize(8);
-            doc.text('ILK Company ApS', 23, 31);
-            
-            doc.setTextColor(0, 0, 0);
+            doc.setFont('helvetica', 'normal');
+            doc.text('ILK Company ApS', 15, 17);
+
             doc.setFontSize(14);
-            doc.text('KØRSELSRAPPORT', 140, 24);
-            doc.setFontSize(10);
-            doc.text(`Dato: ${new Date().toLocaleDateString('da-DK')}`, 140, 30);
-            
-            // Info table
+            doc.setFont('helvetica', 'bold');
+            doc.text('KØRSELSRAPPORT', 140, 12);
+            doc.setFontSize(9);
+            doc.text(`Dato: ${new Date().toLocaleDateString('da-DK')}`, 140, 17);
+
+            // Info tablosu
             doc.autoTable({
-                startY: 38,
+                startY: 28,
                 body: [
-                    [{content: 'CHAUFFØR NAVN', styles: {fillColor: [240,240,240]}}, driver, 
-                     {content: 'VOGN NR.', styles: {fillColor: [240,240,240]}}, vehicle],
-                    [{content: 'START TID', styles: {fillColor: [240,240,240]}}, start,
-                     {content: 'SLUT TID', styles: {fillColor: [240,240,240]}}, end],
-                    [{content: 'PLADS', styles: {fillColor: [240,240,240]}}, currentPlads || '-',
-                     {content: 'TID I ALT', styles: {fillColor: [240,240,240]}}, 
-                     {content: time ? `${time.h}t ${time.m}m` : '', styles: {textColor: [200,0,0]}}]
+                    [
+                        {content: 'CHAUFFØR NAVN', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
+                        {content: driver, styles: {fontSize: 9}}, 
+                        {content: 'VOGN NR.', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
+                        {content: vehicle, styles: {fontSize: 9}}
+                    ],
+                    [
+                        {content: 'START TID', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
+                        {content: start, styles: {fontSize: 9}},
+                        {content: 'SLUT TID', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
+                        {content: end, styles: {fontSize: 9}}
+                    ],
+                    [
+                        {content: 'PLADS', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
+                        {content: currentPlads || '-', styles: {fontSize: 9}},
+                        {content: 'TID I ALT', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
+                        {content: `${time.h}t ${time.m}m`, styles: {fontSize: 9, fontStyle: 'bold', textColor: [200,0,0]}}
+                    ]
                 ],
                 theme: 'grid',
-                styles: {fontSize: 9, cellPadding: 4},
-                columnStyles: {0: {cellWidth: 35}, 1: {cellWidth: 50}, 2: {cellWidth: 25}, 3: {cellWidth: 40}}
+                styles: {cellPadding: 3, lineWidth: 0.4, lineColor: [150,150,150]},
+                columnStyles: {0: {cellWidth: 35}, 1: {cellWidth: 60}, 2: {cellWidth: 30}, 3: {cellWidth: 55}},
+                margin: {left: 15, right: 15}
             });
-            
-            // Tours table - YENİ FORMAT
+
+            // Turlar
             const completed = tours.filter(t => t.completed || t.isPause);
             let body = [];
-            
-            // Başlık satırı (Plads adı)
-            if (currentPlads) {
-                body.push([{content: currentPlads.toUpperCase(), colSpan: 6, styles: {fillColor: [254, 243, 199], fontStyle: 'bold', fontSize: 10}}]);
-            }
-            
-            completed.forEach(t => {
+            let tourCount = 0;
+
+            const sorted = [...completed].sort((a, b) => {
+                if (a.isPause && !b.isPause) return 1;
+                if (!a.isPause && b.isPause) return -1;
+                const groupA = (a.fraction + '|' + a.facility).toLowerCase();
+                const groupB = (b.fraction + '|' + b.facility).toLowerCase();
+                if (groupA !== groupB) return groupA.localeCompare(groupB);
+                return (a.address || '').localeCompare(b.address || '');
+            });
+
+            sorted.forEach(t => {
+                if (tourCount >= 20) return;
+
                 if (t.isPause) {
-                    // Pause satırı - yeşil arka plan
                     body.push([
-                        {content: `PAUSE ${t.pauseDuration}`, styles: {fillColor: [220, 252, 231], fontStyle: 'bold'}},
-                        {content: '', styles: {fillColor: [220, 252, 231]}},
-                        {content: '', styles: {fillColor: [220, 252, 231]}},
-                        {content: '', styles: {fillColor: [220, 252, 231]}},
-                        {content: t.time || '', styles: {fillColor: [220, 252, 231]}},
-                        {content: '', styles: {fillColor: [220, 252, 231]}}
+                        {content: `PAUSE ${t.pauseDuration}min`, colSpan: 5, styles: {fillColor: [254, 243, 199], fontStyle: 'bold', fontSize: 8}}
                     ]);
                 } else {
-                    // Normal tur satırı
-                    // Samme dags bestilling = rød baggrund
-                    const isSameDay = t.isSameDay;
-                    const rowStyle = isSameDay ? {fillColor: [254, 226, 226]} : {};
-                    
                     body.push([
-                        {content: t.fraction, styles: rowStyle},           // 1. Fraktion (ne olduğu)
-                        {content: t.facility, styles: rowStyle},           // 2. Modtageanlæg (gideceği yer)
-                        {content: t.address, styles: rowStyle},            // 3. Adresse
-                        {content: t.weight ? `${t.weight} kg` : '', styles: {...rowStyle, fillColor: isSameDay ? [254, 226, 226] : [220, 252, 231]}}, // 4. Vægt (yeşil)
-                        {content: t.time || '', styles: {...rowStyle, fillColor: isSameDay ? [254, 226, 226] : [240, 240, 240]}}, // 5. Tid (gri)
-                        {content: '', styles: rowStyle}                     // 6. Netpå (boş)
+                        {content: t.fraction, styles: {fontSize: 8}},
+                        {content: t.facility, styles: {fontSize: 8}},
+                        {content: t.address, styles: {fontSize: 8}},
+                        {content: t.weight ? t.weight + ' kg' : '', styles: {fontSize: 8, fontStyle: 'bold'}},
+                        {content: t.time || '', styles: {fontSize: 8}}
                     ]);
+                    tourCount++;
                 }
             });
-            
-            // Boş satırlar doldur (en az 15 satır olsun)
-            while (body.length < 15) {
-                body.push(['', '', '', '', '', '']);
+
+            while (tourCount < 20) {
+                body.push([{content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}]);
+                tourCount++;
             }
-            
+
             doc.autoTable({
                 startY: doc.lastAutoTable.finalY + 5,
-                head: [['FRAKTION', 'AFLÆS. STED', 'ADRESSE', 'VÆGT', 'TIL', 'NETPÅ']],
+                head: [['FRAKTION', 'AFLÆS. STED', 'ADRESSE', 'VÆGT', 'TIL']],
                 body: body,
                 theme: 'grid',
-                headStyles: { 
-                    fillColor: [251, 191, 36], 
-                    textColor: [0, 0, 0], 
-                    fontSize: 9,
-                    fontStyle: 'bold'
-                },
-                styles: {
-                    fontSize: 8, 
-                    cellPadding: 4,
-                    lineColor: [0, 0, 0],
-                    lineWidth: 0.5
-                },
-                columnStyles: {
-                    0: {cellWidth: 30},  // Fraktion
-                    1: {cellWidth: 40},  // Aflæs. sted
-                    2: {cellWidth: 45},  // Adresse
-                    3: {cellWidth: 20},  // Vægt
-                    4: {cellWidth: 20},  // Til
-                    5: {cellWidth: 15}   // Netpå
-                }
+                headStyles: {fillColor: [251, 191, 36], textColor: [0, 0, 0], fontSize: 9, fontStyle: 'bold', cellPadding: 3},
+                styles: {fontSize: 8, cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.3, minCellHeight: 6},
+                columnStyles: {0: {cellWidth: 40}, 1: {cellWidth: 45}, 2: {cellWidth: 65}, 3: {cellWidth: 20}, 4: {cellWidth: 15}},
+                margin: {left: 15, right: 15}
             });
-            
-            // Footer note - rød kasse
-            const y = doc.lastAutoTable.finalY + 5;
-            doc.setDrawColor(200, 0, 0);
-            doc.setLineWidth(0.5);
-            doc.rect(20, y, 170, 12);
-            doc.setTextColor(200, 0, 0);
-            doc.setFontSize(9);
-            doc.text('Container med rød mærke bestilling af samme dag', 25, y + 7);
-            
+
+            // Notlar
+            let finalY = doc.lastAutoTable.finalY + 5;
+            if (notes.trim()) {
+                doc.setFillColor(251, 191, 36);
+                doc.rect(15, finalY, 180, 6, 'F');
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'bold');
+                doc.text('NOTER:', 17, finalY + 4);
+
+                finalY += 8;
+                const splitNotes = doc.splitTextToSize(notes, 176);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text(splitNotes, 17, finalY);
+            }
+
             doc.save(`Korselsrapport_${new Date().toISOString().split('T')[0]}.pdf`);
             showToast('PDF genereret!');
         }
