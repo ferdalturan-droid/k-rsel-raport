@@ -6,7 +6,6 @@
     <title>KORKMAN2 - Kørselsrapport</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -73,7 +72,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Stats Modern */
         .stats-modern {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -105,7 +103,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Forms */
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -147,7 +144,6 @@
             box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
         }
 
-        /* Date Picker Special */
         .date-picker {
             font-size: 1rem;
             font-weight: 600;
@@ -155,7 +151,6 @@
             text-align: center;
         }
 
-        /* Image Upload */
         .upload-area {
             border: 2px dashed #ccc;
             border-radius: 8px;
@@ -211,7 +206,6 @@
             display: block;
         }
 
-        /* Table Premium */
         .table-container {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -268,7 +262,6 @@
             border-color: #dc2626;
         }
 
-        /* Buttons */
         .btn {
             padding: 10px 16px;
             border: none;
@@ -323,7 +316,6 @@
             color: white;
         }
 
-        /* Tags */
         .tag-container {
             display: flex;
             flex-wrap: wrap;
@@ -351,7 +343,6 @@
             box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
         }
 
-        /* Add Tour Form */
         .add-form {
             display: grid;
             gap: 10px;
@@ -381,7 +372,6 @@
             color: #991b1b;
         }
 
-        /* Note Area */
         .note-area {
             width: 100%;
             min-height: 80px;
@@ -392,7 +382,6 @@
             resize: vertical;
         }
 
-        /* PDF Footer */
         .pdf-footer {
             position: fixed;
             bottom: 0;
@@ -411,7 +400,6 @@
             font-size: 0.9rem;
         }
 
-        /* Toast */
         .toast {
             position: fixed;
             top: 50%;
@@ -432,69 +420,6 @@
         .toast.show {
             opacity: 1;
         }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 100;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            max-width: 400px;
-            width: 100%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            font-weight: 700;
-            font-size: 1.1rem;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #dc2626;
-        }
-
-        .preview-image {
-            max-width: 100%;
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-
-        .ocr-text {
-            background: #f3f4f6;
-            padding: 12px;
-            border-radius: 6px;
-            font-family: monospace;
-            font-size: 0.8rem;
-            max-height: 200px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-            white-space: pre-wrap;
-        }
-
-        .col-fraction { min-width: 100px; }
-        .col-facility { min-width: 110px; }
-        .col-address { min-width: 130px; }
-        .col-container { min-width: 80px; }
-        .col-weight { min-width: 70px; }
-        .col-time { min-width: 75px; }
-        .col-action { min-width: 50px; }
 
         .badge-same {
             background: #dc2626;
@@ -541,16 +466,15 @@
                 </div>
             </div>
 
-            <!-- Tarih Seçimi -->
+            <!-- Tarih -->
             <div class="section">
                 <div class="section-header">📅 Vælg Dato</div>
                 <div style="padding: 15px;">
-                    <input type="date" class="form-input date-picker" id="reportDate" 
-                           value="${new Date().toISOString().split('T')[0]}">
+                    <input type="date" class="form-input date-picker" id="reportDate">
                 </div>
             </div>
 
-            <!-- Chauffør Info -->
+            <!-- Chauffør -->
             <div class="section">
                 <div class="section-header">👤 Chauffør Information</div>
                 <div class="form-grid">
@@ -595,17 +519,20 @@
                 </div>
             </div>
 
-            <!-- Fotoğraf ile Ekleme (OCR) -->
+            <!-- Fotoğraf -->
             <div class="section">
-                <div class="section-header">📸 Indsæt fra billede (OCR)</div>
+                <div class="section-header">📸 Indsæt fra billede</div>
                 <div class="upload-area" onclick="document.getElementById('imageInput').click()" id="uploadArea">
                     <div class="upload-icon">📷</div>
-                    <div class="upload-text">Tryk her for at tage foto eller vælg billede<br><small>Vi læser automatisk tabellen</small></div>
+                    <div class="upload-text">
+                        <strong>Tryk her for at vælge billede</strong><br>
+                        <small>Tag skærmbillede af mailen og vælg her</small>
+                    </div>
                     <button class="upload-btn">Vælg Billede</button>
                 </div>
                 <input type="file" id="imageInput" accept="image/*" onchange="handleImage(event)">
                 <div class="ocr-status" id="ocrStatus">
-                    ⏳ Læser billede... Vent venligst
+                    ⏳ Behandler billede...
                 </div>
             </div>
 
@@ -621,7 +548,7 @@
                 </div>
             </div>
 
-            <!-- Manuel Tur Ekleme -->
+            <!-- Manuel Tur -->
             <div class="section">
                 <div class="section-header">➕ Tilføj manuel tur</div>
                 <div class="add-form">
@@ -639,9 +566,9 @@
 
             <!-- PDF Notu -->
             <div class="section">
-                <div class="section-header">📝 Note til PDF</div>
+                <div class="section-header">📝 Note til PDF (valgfri)</div>
                 <div style="padding: 12px;">
-                    <textarea class="note-area" id="pdfNote" placeholder="Skriv din note her... Denne note vises i PDF rapporten i stedet for den røde kasse."></textarea>
+                    <textarea class="note-area" id="pdfNote" placeholder="Skriv note her hvis nødvendig..."></textarea>
                 </div>
             </div>
 
@@ -674,37 +601,21 @@
             </div>
         </div>
 
-        <!-- Footer -->
         <div class="pdf-footer">
             <button class="btn" onclick="clearAll()" style="background: #6b7280; color: white; flex: 0.5;">Slet</button>
             <button class="btn btn-success" onclick="generatePDF()" style="flex: 1.5;">📄 Generer PDF</button>
         </div>
     </div>
 
-    <!-- OCR Modal -->
-    <div class="modal" id="ocrModal">
-        <div class="modal-content">
-            <div class="modal-header">Bekræft OCR Resultat</div>
-            <img id="previewImage" class="preview-image">
-            <div style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Genkendt tekst:</div>
-            <div class="ocr-text" id="ocrText"></div>
-            <div style="display: flex; gap: 10px;">
-                <button class="btn" onclick="closeModal()" style="flex: 1; background: #6b7280; color: white;">Annuller</button>
-                <button class="btn btn-primary" onclick="confirmOCR()" style="flex: 1;">Tilføj Ture</button>
-            </div>
-        </div>
-    </div>
-
     <div class="toast" id="toast"></div>
 
     <script>
+        // Set date today
+        document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
+
         let tours = JSON.parse(localStorage.getItem('korkman2_tours')) || [];
         let tourIdCounter = tours.length > 0 ? Math.max(...tours.map(t => t.id)) + 1 : 1;
         let currentPlads = '';
-        let lastOCRText = '';
-
-        // Set today's date
-        document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
 
         document.addEventListener('DOMContentLoaded', () => {
             renderTours();
@@ -728,51 +639,23 @@
             document.getElementById('customPlads').value = '';
         }
 
-        // OCR Image Handling
-        async function handleImage(event) {
+        // SIMPLE IMAGE HANDLING - No OCR, just shows image for manual entry
+        function handleImage(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            const status = document.getElementById('ocrStatus');
-            const uploadArea = document.getElementById('uploadArea');
+            showToast('Billede valgt - brug manuel indtastning');
             
-            status.classList.add('processing');
-            uploadArea.classList.add('active');
-            showToast('Læser billede...');
-
-            try {
-                const result = await Tesseract.recognize(file, 'dan', {
-                    logger: m => console.log(m)
-                });
-
-                lastOCRText = result.data.text;
-                
-                // Show preview
-                const reader = new FileReader();
-                reader.onload = e => {
-                    document.getElementById('previewImage').src = e.target.result;
-                    document.getElementById('ocrText').textContent = lastOCRText;
-                    document.getElementById('ocrModal').classList.add('active');
-                };
-                reader.readAsDataURL(file);
-
-            } catch (err) {
-                showToast('Fejl ved læsning af billede');
-                console.error(err);
-            } finally {
-                status.classList.remove('processing');
-                uploadArea.classList.remove('active');
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('ocrModal').classList.remove('active');
-        }
-
-        function confirmOCR() {
-            document.getElementById('pasteArea').value = lastOCRText;
-            closeModal();
-            parsePastedData();
+            // Optional: Show image preview in a simple way
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // You could show preview here if needed
+                console.log('Image loaded');
+            };
+            reader.readAsDataURL(file);
+            
+            // Focus on manual input
+            document.getElementById('manualFraction').focus();
         }
 
         function sortByAddress(list) {
@@ -787,12 +670,16 @@
             const lines = text.split('\n').filter(l => l.trim());
             
             lines.forEach(line => {
-                // Try to parse various formats
-                const cells = line.split(/\t|  +/).map(c => c.trim()).filter(c => c);
+                // Try tab separated first
+                let cells = line.split('\t').map(c => c.trim()).filter(c => c);
+                
+                // If no tabs, try multiple spaces
+                if (cells.length < 4) {
+                    cells = line.split(/\s{2,}/).map(c => c.trim()).filter(c => c);
+                }
                 
                 if (cells.length >= 4) {
-                    // Detect if it's a date format or just data
-                    const hasDate = /^\d{2}[-/.]\d{2}[-/.]\d{4}/.test(cells[0]);
+                    const hasDate = /^\d{2}[-/.]\d{2}[-/.]\d{2,4}/.test(cells[0]);
                     
                     tours.push({
                         id: tourIdCounter++,
@@ -820,7 +707,7 @@
                 updateStats();
                 showToast(`${added} ture tilføjet!`);
             } else {
-                showToast('Kunne ikke genkende data format');
+                showToast('Kunne ikke genkende format - prøv manuel indtastning');
             }
         }
 
@@ -851,7 +738,7 @@
                 plads: currentPlads
             });
 
-            // Clear inputs
+            // Clear
             document.getElementById('manualFraction').value = '';
             document.getElementById('manualFacility').value = '';
             document.getElementById('manualAddress').value = '';
@@ -983,7 +870,7 @@
             const h = Math.floor(diff / (1000 * 60 * 60));
             const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             document.getElementById('timeDisplay').textContent = `${h}t ${m}m`;
-            return { h, m, totalMin: h * 60 + m };
+            return { h, m };
         }
 
         function updateStats() {
@@ -1011,7 +898,7 @@
             }
         }
 
-        // PROFESSIONAL PDF GENERATION
+        // COMPACT SINGLE PAGE PDF
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
@@ -1026,229 +913,156 @@
             const time = calculateTotalTime();
             const timeStr = time ? `${time.h}t ${time.m}m` : '';
             
-            // === HEADER SECTION ===
-            // Red box with logo
+            // Header - Compact
             doc.setFillColor(220, 38, 38);
-            doc.rect(15, 10, 60, 22, 'F');
+            doc.rect(15, 10, 50, 16, 'F');
             
-            // Logo text
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(20);
+            doc.setFontSize(18);
             doc.setFont('helvetica', 'bold');
-            doc.text('KORKMAN2', 18, 23);
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
-            doc.text('ILK Company ApS', 18, 28);
+            doc.text('KORKMAN2', 17, 20);
+            doc.setFontSize(8);
+            doc.text('ILK Company ApS', 17, 23);
             
-            // Report title
             doc.setTextColor(0, 0, 0);
-            doc.setFontSize(16);
+            doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text('KØRSELSRAPPORT', 130, 18);
+            doc.text('KØRSELSRAPPORT', 130, 16);
+            doc.setFontSize(9);
+            doc.text(`Dato: ${date}`, 130, 21);
             
-            // Date
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text(`Dato: ${date}`, 130, 25);
-            
-            // === INFO TABLE ===
-            const infoRows = [
-                [
-                    { content: 'CHAUFFØR NAVN', styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } },
-                    { content: driver, styles: { fontStyle: 'italic' } },
-                    { content: 'VOGN NR. / REG.NR.', styles: { fillColor: [230, 230, 230], fontStyle: 'bold', textColor: [0, 128, 0] } },
-                    { content: vehicle, styles: { textColor: [0, 128, 0], fontStyle: 'bold' } }
-                ],
-                [
-                    { content: 'START TID', styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } },
-                    { content: start, styles: { textColor: [0, 128, 0], fontStyle: 'bold' } },
-                    { content: 'SLUT TID', styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } },
-                    { content: end, styles: { textColor: [0, 128, 0], fontStyle: 'bold' } }
-                ],
-                [
-                    { content: 'PLADS', styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } },
-                    { content: currentPlads || '-', styles: {} },
-                    { content: 'TID I ALT', styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } },
-                    { content: timeStr, styles: { textColor: [200, 0, 0], fontStyle: 'bold' } }
-                ]
-            ];
-            
+            // Info table - Compact
             doc.autoTable({
-                startY: 35,
-                body: infoRows,
+                startY: 28,
+                body: [
+                    [
+                        { content: 'CHAUFFØR NAVN', styles: { fillColor: [240, 240, 240], fontStyle: 'bold', fontSize: 8 } },
+                        { content: driver, styles: { fontSize: 9, fontStyle: 'italic' } },
+                        { content: 'VOGN NR.', styles: { fillColor: [240, 240, 240], fontStyle: 'bold', fontSize: 8, textColor: [0, 128, 0] } },
+                        { content: vehicle, styles: { fontSize: 9, textColor: [0, 128, 0], fontStyle: 'bold' } }
+                    ],
+                    [
+                        { content: 'START', styles: { fillColor: [240, 240, 240], fontStyle: 'bold', fontSize: 8 } },
+                        { content: start, styles: { fontSize: 9, textColor: [0, 128, 0] } },
+                        { content: 'SLUT', styles: { fillColor: [240, 240, 240], fontStyle: 'bold', fontSize: 8 } },
+                        { content: end, styles: { fontSize: 9, textColor: [0, 128, 0] } }
+                    ],
+                    [
+                        { content: 'PLADS', styles: { fillColor: [240, 240, 240], fontStyle: 'bold', fontSize: 8 } },
+                        { content: currentPlads || '-', styles: { fontSize: 9 } },
+                        { content: 'TOTAL', styles: { fillColor: [240, 240, 240], fontStyle: 'bold', fontSize: 8 } },
+                        { content: timeStr, styles: { fontSize: 9, textColor: [200, 0, 0], fontStyle: 'bold' } }
+                    ]
+                ],
                 theme: 'grid',
-                styles: { 
-                    fontSize: 9, 
-                    cellPadding: 5,
-                    lineColor: [100, 100, 100],
-                    lineWidth: 0.5
-                },
+                styles: { cellPadding: 3, lineColor: [100, 100, 100], lineWidth: 0.3 },
                 columnStyles: {
-                    0: { cellWidth: 40 },
-                    1: { cellWidth: 55 },
-                    2: { cellWidth: 30 },
-                    3: { cellWidth: 45 }
+                    0: { cellWidth: 35 },
+                    1: { cellWidth: 50 },
+                    2: { cellWidth: 25 },
+                    3: { cellWidth: 40 }
                 }
             });
             
-            // === TOURS TABLE ===
-            const completed = tours.filter(t => t.completed || t.isPause);
+            // Tours table - MAX 12 rows to fit one page
+            const completed = tours.filter(t => t.completed || t.isPause).slice(0, 12); // Limit to 12 rows
             
             let bodyData = [];
             
-            // Plads header
             if (currentPlads) {
                 bodyData.push([
-                    { 
-                        content: currentPlads.toUpperCase(), 
-                        colSpan: 6, 
-                        styles: { 
-                            fillColor: [254, 240, 200], 
-                            fontStyle: 'bold',
-                            fontSize: 10,
-                            halign: 'center'
-                        } 
-                    }
+                    { content: currentPlads.toUpperCase(), colSpan: 6, styles: { fillColor: [254, 240, 200], fontStyle: 'bold', fontSize: 9, halign: 'center' } }
                 ]);
             }
             
-            // Data rows
             completed.forEach(t => {
                 if (t.isPause) {
-                    // Pause row - light green
                     bodyData.push([
-                        { 
-                            content: `PAUSE ${t.pauseDuration}`, 
-                            styles: { 
-                                fillColor: [220, 252, 231], 
-                                fontStyle: 'bold',
-                                textColor: [0, 100, 0]
-                            } 
-                        },
+                        { content: `PAUSE ${t.pauseDuration}min`, styles: { fillColor: [220, 252, 231], fontStyle: 'bold', fontSize: 8 } },
                         { content: '', styles: { fillColor: [220, 252, 231] } },
                         { content: '', styles: { fillColor: [220, 252, 231] } },
                         { content: '', styles: { fillColor: [220, 252, 231] } },
-                        { content: t.time || '', styles: { fillColor: [220, 252, 231] } },
-                        { content: '', styles: { fillColor: [220, 252, 231] } }
+                        { content: '', styles: { fillColor: [220, 252, 231] } },
+                        { content: t.time || '', styles: { fillColor: [220, 252, 231], fontSize: 8 } }
                     ]);
                 } else {
-                    // Normal tour
                     const isSameDay = t.isSameDay;
                     const bgColor = isSameDay ? [254, 226, 226] : [255, 255, 255];
-                    const textColor = isSameDay ? [150, 0, 0] : [0, 0, 0];
                     
                     bodyData.push([
-                        { 
-                            content: t.fraction, 
-                            styles: { 
-                                fillColor: bgColor,
-                                textColor: textColor,
-                                fontStyle: isSameDay ? 'bold' : 'normal'
-                            } 
-                        },
-                        { 
-                            content: t.facility, 
-                            styles: { fillColor: bgColor, textColor: textColor } 
-                        },
-                        { 
-                            content: t.address, 
-                            styles: { fillColor: bgColor, textColor: textColor } 
-                        },
-                        { 
-                            content: t.container, 
-                            styles: { fillColor: bgColor, textColor: textColor } 
-                        },
-                        { 
-                            content: t.weight ? `${t.weight} kg` : '', 
-                            styles: { 
-                                fillColor: isSameDay ? [254, 226, 226] : [220, 252, 231],
-                                fontStyle: 'bold',
-                                halign: 'right'
-                            } 
-                        },
-                        { 
-                            content: t.time || '', 
-                            styles: { 
-                                fillColor: isSameDay ? [254, 226, 226] : [240, 240, 240],
-                                halign: 'center'
-                            } 
-                        }
+                        { content: t.fraction, styles: { fillColor: bgColor, fontSize: 8, fontStyle: isSameDay ? 'bold' : 'normal' } },
+                        { content: t.facility, styles: { fillColor: bgColor, fontSize: 8 } },
+                        { content: t.address, styles: { fillColor: bgColor, fontSize: 7 } },
+                        { content: t.container, styles: { fillColor: bgColor, fontSize: 8 } },
+                        { content: t.weight ? `${t.weight}kg` : '', styles: { fillColor: [220, 252, 231], fontSize: 8, halign: 'right' } },
+                        { content: t.time || '', styles: { fillColor: [240, 240, 240], fontSize: 8, halign: 'center' } }
                     ]);
                 }
             });
             
-            // Empty rows to fill page
-            while (bodyData.length < 18) {
+            // Fill remaining rows (max 12 total including header)
+            const maxRows = 12;
+            while (bodyData.length < maxRows) {
                 bodyData.push(['', '', '', '', '', '']);
             }
             
-            // Draw table
             doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 8,
-                head: [['FRAKTION', 'AFLÆS. STED', 'ADRESSE', 'CONTAINE', 'VÆGT', 'TIL']],
+                startY: doc.lastAutoTable.finalY + 4,
+                head: [['FRAKTION', 'AFLÆS.STED', 'ADRESSE', 'CONT.', 'VÆGT', 'TIL']],
                 body: bodyData,
                 theme: 'grid',
                 headStyles: { 
-                    fillColor: [251, 191, 36],
-                    textColor: [0, 0, 0],
-                    fontSize: 9,
+                    fillColor: [251, 191, 36], 
+                    textColor: [0, 0, 0], 
+                    fontSize: 8,
                     fontStyle: 'bold',
-                    halign: 'left'
+                    cellPadding: 2
                 },
                 styles: {
-                    fontSize: 8.5,
-                    cellPadding: 4,
+                    fontSize: 7.5,
+                    cellPadding: 2,
                     lineColor: [80, 80, 80],
-                    lineWidth: 0.4,
+                    lineWidth: 0.3,
                     valign: 'middle'
                 },
                 columnStyles: {
-                    0: { cellWidth: 32 },  // Fraktion
-                    1: { cellWidth: 42 },  // Aflæs. sted
-                    2: { cellWidth: 48 },  // Adresse
-                    3: { cellWidth: 22 },  // Containe
-                    4: { cellWidth: 20, halign: 'right' },  // Vægt
-                    5: { cellWidth: 18, halign: 'center' }   // Til
-                },
-                alternateRowStyles: {
-                    fillColor: [250, 250, 250]
+                    0: { cellWidth: 28 },
+                    1: { cellWidth: 35 },
+                    2: { cellWidth: 45 },
+                    3: { cellWidth: 20 },
+                    4: { cellWidth: 18, halign: 'right' },
+                    5: { cellWidth: 16, halign: 'center' }
                 }
             });
             
-            // === NOTE SECTION (Custom or Default) ===
-            const finalY = doc.lastAutoTable.finalY + 5;
+            // Note or Signature line - Compact
+            const finalY = doc.lastAutoTable.finalY + 3;
             
             if (note && note.trim()) {
-                // Custom note
                 doc.setDrawColor(100, 100, 100);
-                doc.setLineWidth(0.5);
-                doc.rect(15, finalY, 180, 20);
-                
-                doc.setFontSize(9);
-                doc.setTextColor(50, 50, 50);
-                doc.text('NOTE:', 18, finalY + 7);
-                
+                doc.setLineWidth(0.3);
+                doc.rect(15, finalY, 180, 12);
+                doc.setFontSize(7);
+                doc.setTextColor(100, 100, 100);
+                doc.text('NOTE:', 17, finalY + 5);
                 doc.setFontSize(8);
                 doc.setTextColor(0, 0, 0);
                 const splitNote = doc.splitTextToSize(note, 170);
-                doc.text(splitNote, 18, finalY + 13);
+                doc.text(splitNote, 17, finalY + 9);
             } else {
-                // Default empty box for signature
                 doc.setDrawColor(150, 150, 150);
-                doc.setLineWidth(0.3);
-                doc.rect(15, finalY, 180, 15);
-                
-                doc.setFontSize(8);
+                doc.setLineWidth(0.2);
+                doc.line(15, finalY + 8, 100, finalY + 8);
+                doc.setFontSize(7);
                 doc.setTextColor(100, 100, 100);
-                doc.text('Underskrift / Bemærkninger:', 18, finalY + 6);
+                doc.text('Underskrift', 17, finalY + 12);
             }
             
             // Footer
-            doc.setFontSize(7);
+            doc.setFontSize(6);
             doc.setTextColor(150, 150, 150);
-            doc.text(`Genereret af KORKMAN2 System - ${new Date().toLocaleString('da-DK')}`, 105, 290, { align: 'center' });
+            doc.text(`KORKMAN2 System - ${new Date().toLocaleString('da-DK')}`, 105, 285, { align: 'center' });
             
-            // Save
             doc.save(`Korselsrapport_${date.replace(/\./g, '-')}.pdf`);
             showToast('PDF genereret!');
         }
