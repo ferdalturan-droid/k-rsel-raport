@@ -6,6 +6,7 @@
     <title>KORKMAN2 - Kørselsrapport</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src='https://unpkg.com/tesseract.js@4.1.1/dist/tesseract.min.js'></script>
     <style>
         * {
             margin: 0;
@@ -206,6 +207,23 @@
             display: block;
         }
 
+        .ocr-preview {
+            padding: 10px;
+            background: #f3f4f6;
+            margin: 10px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            max-height: 150px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            display: none;
+        }
+
+        .ocr-preview.active {
+            display: block;
+        }
+
         .table-container {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
@@ -374,7 +392,7 @@
 
         .note-area {
             width: 100%;
-            min-height: 80px;
+            min-height: 60px;
             border: 1.5px solid #ddd;
             border-radius: 6px;
             padding: 10px;
@@ -519,21 +537,22 @@
                 </div>
             </div>
 
-            <!-- Fotoğraf -->
+            <!-- Fotoğraf OCR -->
             <div class="section">
-                <div class="section-header">📸 Indsæt fra billede</div>
+                <div class="section-header">📸 Indsæt fra billede (OCR)</div>
                 <div class="upload-area" onclick="document.getElementById('imageInput').click()" id="uploadArea">
                     <div class="upload-icon">📷</div>
                     <div class="upload-text">
                         <strong>Tryk her for at vælge billede</strong><br>
-                        <small>Tag skærmbillede af mailen og vælg her</small>
+                        <small>Tag foto af skærmen med mailen</small>
                     </div>
                     <button class="upload-btn">Vælg Billede</button>
                 </div>
                 <input type="file" id="imageInput" accept="image/*" onchange="handleImage(event)">
                 <div class="ocr-status" id="ocrStatus">
-                    ⏳ Behandler billede...
+                    ⏳ Læser billede... vent venligst
                 </div>
+                <div class="ocr-preview" id="ocrPreview"></div>
             </div>
 
             <!-- Manuel Input -->
@@ -566,9 +585,9 @@
 
             <!-- PDF Notu -->
             <div class="section">
-                <div class="section-header">📝 Note til PDF (valgfri)</div>
+                <div class="section-header">📝 Note til PDF</div>
                 <div style="padding: 12px;">
-                    <textarea class="note-area" id="pdfNote" placeholder="Skriv note her hvis nødvendig..."></textarea>
+                    <textarea class="note-area" id="pdfNote" placeholder="Skriv din note her... Denne tekst vises i PDF rapporten."></textarea>
                 </div>
             </div>
 
@@ -639,23 +658,118 @@
             document.getElementById('customPlads').value = '';
         }
 
-        // SIMPLE IMAGE HANDLING - No OCR, just shows image for manual entry
-        function handleImage(event) {
+        // OCR with Tesseract
+        async function handleImage(event) {
             const file = event.target.files[0];
             if (!file) return;
 
-            showToast('Billede valgt - brug manuel indtastning');
+            const status = document.getElementById('ocrStatus');
+            const preview = document.getElementById('ocrPreview');
+            const uploadArea = document.getElementById('uploadArea');
             
-            // Optional: Show image preview in a simple way
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                // You could show preview here if needed
-                console.log('Image loaded');
-            };
-            reader.readAsDataURL(file);
+            status.classList.add('processing');
+            uploadArea.classList.add('active');
+            showToast('Læser billede... vent');
+
+            try {
+                const result = await Tesseract.recognize(file, 'dan', {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            status.textContent = `Læser... ${Math.round(m.progress * 100)}%`;
+                        }
+                    }
+                });
+
+                const text = result.data.text;
+                preview.textContent = text;
+                preview.classList.add('active');
+                
+                // Auto-fill paste area
+                document.getElementById('pasteArea').value = text;
+                
+                showToast('Tekst genkendt! Tryk "Tilføj Ture"');
+                
+                // Try to parse automatically
+                setTimeout(() => {
+                    if (confirm('Tekst genkendt. Vil du tilføje ture automatisk?')) {
+                        parseOCRText(text);
+                    }
+                }, 500);
+
+            } catch (err) {
+                showToast('Fejl ved læsning - prøv manuel indtastning');
+                console.error(err);
+            } finally {
+                status.classList.remove('processing');
+                status.textContent = '⏳ Læser billede... vent venligst';
+                uploadArea.classList.remove('active');
+            }
+        }
+
+        function parseOCRText(text) {
+            const lines = text.split('\n').filter(l => l.trim());
+            let added = 0;
             
-            // Focus on manual input
-            document.getElementById('manualFraction').focus();
+            lines.forEach(line => {
+                // Clean up the line
+                const cleanLine = line.replace(/\s+/g, ' ').trim();
+                
+                // Try to find patterns like:
+                // "04-03-2026 93588 Pap Tømning Stena Address"
+                // or "Pap Stena Address 1234"
+                
+                const parts = cleanLine.split(' ').filter(p => p.length > 0);
+                
+                if (parts.length >= 4) {
+                    // Check if first part is date
+                    const hasDate = /^\d{2}[-/.]\d{2}[-/.]\d{2,4}/.test(parts[0]);
+                    
+                    let date, container, fraction, facility, address;
+                    
+                    if (hasDate) {
+                        date = parts[0];
+                        container = parts[1] || '';
+                        fraction = parts[2] || '';
+                        // Find facility (usually after fraction)
+                        facility = parts.slice(3).find(p => p.length > 3 && !p.match(/^\d/)) || parts[3] || '';
+                        address = parts.slice(parts.indexOf(facility) + 1).join(' ') || '';
+                    } else {
+                        date = document.getElementById('reportDate').value;
+                        fraction = parts[0] || '';
+                        facility = parts[1] || '';
+                        container = parts.find(p => p.match(/^\d{3,}/)) || '';
+                        address = parts.slice(2).join(' ') || '';
+                    }
+                    
+                    if (fraction && facility) {
+                        tours.push({
+                            id: tourIdCounter++,
+                            date: date,
+                            container: container,
+                            fraction: fraction,
+                            facility: facility,
+                            address: address,
+                            note: '',
+                            completed: false,
+                            weight: '',
+                            time: '',
+                            isPause: false,
+                            isSameDay: false,
+                            plads: currentPlads
+                        });
+                        added++;
+                    }
+                }
+            });
+            
+            if (added > 0) {
+                tours = sortByAddress(tours);
+                renderTours();
+                updateStats();
+                showToast(`${added} ture tilføjet fra billede!`);
+            } else {
+                showToast('Kunne ikke genkende ture - brug manuel indtastning');
+            }
         }
 
         function sortByAddress(list) {
@@ -665,50 +779,7 @@
         function parsePastedData() {
             const text = document.getElementById('pasteArea').value.trim();
             if (!text) return showToast('Indsæt data først!');
-
-            let added = 0;
-            const lines = text.split('\n').filter(l => l.trim());
-            
-            lines.forEach(line => {
-                // Try tab separated first
-                let cells = line.split('\t').map(c => c.trim()).filter(c => c);
-                
-                // If no tabs, try multiple spaces
-                if (cells.length < 4) {
-                    cells = line.split(/\s{2,}/).map(c => c.trim()).filter(c => c);
-                }
-                
-                if (cells.length >= 4) {
-                    const hasDate = /^\d{2}[-/.]\d{2}[-/.]\d{2,4}/.test(cells[0]);
-                    
-                    tours.push({
-                        id: tourIdCounter++,
-                        date: hasDate ? cells[0] : document.getElementById('reportDate').value,
-                        container: hasDate ? cells[1] : cells[0],
-                        fraction: hasDate ? cells[2] : cells[1],
-                        facility: hasDate ? (cells[4] || cells[3]) : (cells[2] || ''),
-                        address: hasDate ? (cells[5] || '') : (cells[3] || ''),
-                        note: '',
-                        completed: false,
-                        weight: '',
-                        time: '',
-                        isPause: false,
-                        isSameDay: false,
-                        plads: currentPlads
-                    });
-                    added++;
-                }
-            });
-
-            if (added) {
-                tours = sortByAddress(tours);
-                document.getElementById('pasteArea').value = '';
-                renderTours();
-                updateStats();
-                showToast(`${added} ture tilføjet!`);
-            } else {
-                showToast('Kunne ikke genkende format - prøv manuel indtastning');
-            }
+            parseOCRText(text);
         }
 
         function addManualTour() {
@@ -738,7 +809,6 @@
                 plads: currentPlads
             });
 
-            // Clear
             document.getElementById('manualFraction').value = '';
             document.getElementById('manualFacility').value = '';
             document.getElementById('manualAddress').value = '';
@@ -898,7 +968,7 @@
             }
         }
 
-        // COMPACT SINGLE PAGE PDF
+        // PDF - 20 rows, note box at bottom
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
@@ -913,27 +983,27 @@
             const time = calculateTotalTime();
             const timeStr = time ? `${time.h}t ${time.m}m` : '';
             
-            // Header - Compact
+            // Header
             doc.setFillColor(220, 38, 38);
-            doc.rect(15, 10, 50, 16, 'F');
+            doc.rect(15, 8, 50, 16, 'F');
             
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(18);
             doc.setFont('helvetica', 'bold');
-            doc.text('KORKMAN2', 17, 20);
+            doc.text('KORKMAN2', 17, 18);
             doc.setFontSize(8);
-            doc.text('ILK Company ApS', 17, 23);
+            doc.text('ILK Company ApS', 17, 22);
             
             doc.setTextColor(0, 0, 0);
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text('KØRSELSRAPPORT', 130, 16);
+            doc.text('KØRSELSRAPPORT', 130, 14);
             doc.setFontSize(9);
-            doc.text(`Dato: ${date}`, 130, 21);
+            doc.text(`Dato: ${date}`, 130, 19);
             
             // Info table - Compact
             doc.autoTable({
-                startY: 28,
+                startY: 26,
                 body: [
                     [
                         { content: 'CHAUFFØR NAVN', styles: { fillColor: [240, 240, 240], fontStyle: 'bold', fontSize: 8 } },
@@ -955,7 +1025,7 @@
                     ]
                 ],
                 theme: 'grid',
-                styles: { cellPadding: 3, lineColor: [100, 100, 100], lineWidth: 0.3 },
+                styles: { cellPadding: 2, lineColor: [100, 100, 100], lineWidth: 0.3 },
                 columnStyles: {
                     0: { cellWidth: 35 },
                     1: { cellWidth: 50 },
@@ -964,8 +1034,8 @@
                 }
             });
             
-            // Tours table - MAX 12 rows to fit one page
-            const completed = tours.filter(t => t.completed || t.isPause).slice(0, 12); // Limit to 12 rows
+            // Tours table - MAX 20 rows
+            const completed = tours.filter(t => t.completed || t.isPause).slice(0, 20);
             
             let bodyData = [];
             
@@ -1000,14 +1070,13 @@
                 }
             });
             
-            // Fill remaining rows (max 12 total including header)
-            const maxRows = 12;
-            while (bodyData.length < maxRows) {
+            // Fill to 20 rows
+            while (bodyData.length < 20) {
                 bodyData.push(['', '', '', '', '', '']);
             }
             
             doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 4,
+                startY: doc.lastAutoTable.finalY + 3,
                 head: [['FRAKTION', 'AFLÆS.STED', 'ADRESSE', 'CONT.', 'VÆGT', 'TIL']],
                 body: bodyData,
                 theme: 'grid',
@@ -1035,33 +1104,30 @@
                 }
             });
             
-            // Note or Signature line - Compact
-            const finalY = doc.lastAutoTable.finalY + 3;
+            // Note box at bottom (no signature)
+            const finalY = doc.lastAutoTable.finalY + 4;
+            
+            // Draw note box
+            doc.setDrawColor(100, 100, 100);
+            doc.setLineWidth(0.5);
+            doc.rect(15, finalY, 180, 20);
             
             if (note && note.trim()) {
-                doc.setDrawColor(100, 100, 100);
-                doc.setLineWidth(0.3);
-                doc.rect(15, finalY, 180, 12);
+                // Has note text
                 doc.setFontSize(7);
                 doc.setTextColor(100, 100, 100);
-                doc.text('NOTE:', 17, finalY + 5);
+                doc.text('NOTE:', 17, finalY + 6);
+                
                 doc.setFontSize(8);
                 doc.setTextColor(0, 0, 0);
-                const splitNote = doc.splitTextToSize(note, 170);
-                doc.text(splitNote, 17, finalY + 9);
+                const splitNote = doc.splitTextToSize(note, 175);
+                doc.text(splitNote, 17, finalY + 11);
             } else {
-                doc.setDrawColor(150, 150, 150);
-                doc.setLineWidth(0.2);
-                doc.line(15, finalY + 8, 100, finalY + 8);
+                // Empty box
                 doc.setFontSize(7);
-                doc.setTextColor(100, 100, 100);
-                doc.text('Underskrift', 17, finalY + 12);
+                doc.setTextColor(150, 150, 150);
+                doc.text('(Plads til note)', 17, finalY + 10);
             }
-            
-            // Footer
-            doc.setFontSize(6);
-            doc.setTextColor(150, 150, 150);
-            doc.text(`KORKMAN2 System - ${new Date().toLocaleString('da-DK')}`, 105, 285, { align: 'center' });
             
             doc.save(`Korselsrapport_${date.replace(/\./g, '-')}.pdf`);
             showToast('PDF genereret!');
