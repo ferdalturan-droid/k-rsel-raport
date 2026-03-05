@@ -571,8 +571,8 @@
             <div class="section">
                 <div class="section-header">➕ Tilføj manuel tur</div>
                 <div class="add-form">
-                    <input type="text" id="manualFraction" placeholder="Fraktion (f.eks. Pap, Metal)">
-                    <input type="text" id="manualFacility" placeholder="Modtageanlæg (f.eks. Stena)">
+                    <input type="text" id="manualFraction" placeholder="Fraktion (f.eks. Polstrede møbler)">
+                    <input type="text" id="manualFacility" placeholder="Aflæsningssted (f.eks. Solum)">
                     <input type="text" id="manualAddress" placeholder="Adresse">
                     <input type="text" id="manualContainer" placeholder="Container nr.">
                     <div class="checkbox-wrapper">
@@ -714,10 +714,7 @@
                 // Clean up the line
                 const cleanLine = line.replace(/\s+/g, ' ').trim();
                 
-                // Try to find patterns like:
-                // "04-03-2026 93588 Pap Tømning Stena Address"
-                // or "Pap Stena Address 1234"
-                
+                // Try to find patterns
                 const parts = cleanLine.split(' ').filter(p => p.length > 0);
                 
                 if (parts.length >= 4) {
@@ -727,13 +724,19 @@
                     let date, container, fraction, facility, address;
                     
                     if (hasDate) {
+                        // Format: 04-03-2026 93588 Pap Tømning Stena Address
                         date = parts[0];
                         container = parts[1] || '';
                         fraction = parts[2] || '';
-                        // Find facility (usually after fraction)
-                        facility = parts.slice(3).find(p => p.length > 3 && !p.match(/^\d/)) || parts[3] || '';
-                        address = parts.slice(parts.indexOf(facility) + 1).join(' ') || '';
+                        // Skip "Tømning" if present
+                        let facilityIndex = 3;
+                        if (parts[3] && (parts[3].toLowerCase() === 'tømning' || parts[3].toLowerCase() === 'tomning')) {
+                            facilityIndex = 4;
+                        }
+                        facility = parts[facilityIndex] || '';
+                        address = parts.slice(facilityIndex + 1).join(' ') || '';
                     } else {
+                        // Format without date
                         date = document.getElementById('reportDate').value;
                         fraction = parts[0] || '';
                         facility = parts[1] || '';
@@ -790,7 +793,7 @@
             const isSameDay = document.getElementById('sameDayOrder').checked;
 
             if (!fraction || !facility) {
-                return showToast('Udfyld fraktion og modtageanlæg!');
+                return showToast('Udfyld fraktion og aflæsningssted!');
             }
 
             tours.push({
@@ -1095,12 +1098,12 @@
                     valign: 'middle'
                 },
                 columnStyles: {
-                    0: { cellWidth: 28 },
-                    1: { cellWidth: 35 },
-                    2: { cellWidth: 45 },
-                    3: { cellWidth: 20 },
-                    4: { cellWidth: 18, halign: 'right' },
-                    5: { cellWidth: 16, halign: 'center' }
+                    0: { cellWidth: 32 },  // Fraktion - wider for long names
+                    1: { cellWidth: 32 },  // Aflæs.sted
+                    2: { cellWidth: 44 },  // Adresse
+                    3: { cellWidth: 18 },  // Cont.
+                    4: { cellWidth: 18, halign: 'right' },  // Vægt
+                    5: { cellWidth: 16, halign: 'center' }   // Til
                 }
             });
             
