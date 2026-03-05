@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KORKMAN2 - Kørselsrapport</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js "></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-text-size-adjust: 100%; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f5f5; min-height: 100vh; font-size: 14px; }
@@ -23,13 +23,16 @@
         .data-table tr.completed { background: #d1fae5; }
         .data-table tr.pause { background: #fef3c7; }
         .data-table tr.same-day { background: #fee2e2; }
+        .data-table tr.on-way { background: #fef3c7; }
         .data-table input { width: 100%; border: 1px solid #d1d5db; padding: 5px; font-size: 0.8rem; border-radius: 4px; }
         .data-table input:focus { outline: none; border-color: #dc2626; }
         .btn-small { padding: 5px 10px; font-size: 0.75rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
         .btn-done { background: #16a34a; color: white; }
         .btn-undo { background: #6b7280; color: white; }
         .btn-remove { background: #dc2626; color: white; padding: 3px 8px; }
+        .btn-on-way { background: #f59e0b; color: white; }
         .badge-same-day { background: #dc2626; color: white; font-size: 0.6rem; padding: 2px 6px; border-radius: 3px; margin-left: 4px; font-weight: 700; }
+        .container-nr { font-size: 0.7rem; color: #6b7280; display: block; margin-top: 2px; }
         .form-row { display: flex; gap: 10px; padding: 10px 15px; border-bottom: 1px solid #e5e7eb; align-items: center; flex-wrap: wrap; }
         .form-row label { font-size: 0.8rem; font-weight: 600; color: #4b5563; min-width: 70px; }
         .form-input { flex: 1; min-width: 100px; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; }
@@ -65,7 +68,9 @@
         .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; grid-column: span 2; }
         .tour-counter { background: #16a34a; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; }
         .debug-info { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px; margin: 10px 15px; font-size: 0.75rem; color: #374151; max-height: 200px; overflow-y: auto; }
+        .date-input { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-family: inherit; }
     </style>
+<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -108,6 +113,10 @@
                     <input type="time" class="form-input" id="startTime" value="07:00" onchange="calculateTotalTime()" style="width: 90px;">
                     <label>Slut:</label>
                     <input type="time" class="form-input" id="endTime" onchange="calculateTotalTime()" style="width: 90px;">
+                </div>
+                <div class="form-row">
+                    <label>Dato:</label>
+                    <input type="date" class="date-input" id="reportDate" style="flex: 1;">
                 </div>
                 <div class="time-box">
                     <div class="label">Total arbejdstid</div>
@@ -175,15 +184,16 @@
                             <tr>
                                 <th style="width: 20%;">FRAKTION</th>
                                 <th style="width: 25%;">AFLÆS. STED</th>
-                                <th style="width: 30%;">ADRESSE</th>
-                                <th style="width: 10%;">VÆGT</th>
-                                <th style="width: 8%;">TID</th>
-                                <th style="width: 7%;">OK</th>
+                                <th style="width: 25%;">ADRESSE</th>
+                                <th style="width: 10%;">CONT.</th>
+                                <th style="width: 8%;">VÆGT</th>
+                                <th style="width: 7%;">TID</th>
+                                <th style="width: 5%;">OK</th>
                             </tr>
                         </thead>
                         <tbody id="toursBody">
                             <tr>
-                                <td colspan="6" style="text-align: center; padding: 40px; color: #9ca3af;">Ingen ture endnu</td>
+                                <td colspan="7" style="text-align: center; padding: 40px; color: #9ca3af;">Ingen ture endnu</td>
                             </tr>
                         </tbody>
                     </table>
@@ -219,6 +229,7 @@
                 const counter = localStorage.getItem('korkman2_counter');
                 const plads = localStorage.getItem('korkman2_plads');
                 const notes = localStorage.getItem('korkman2_notes');
+                const reportDate = localStorage.getItem('korkman2_reportDate');
 
                 if (saved) tours = JSON.parse(saved);
                 if (counter) tourIdCounter = parseInt(counter);
@@ -229,6 +240,13 @@
                     });
                 }
                 if (notes) document.getElementById('notesText').value = notes;
+                
+                const dateInput = document.getElementById('reportDate');
+                if (reportDate) {
+                    dateInput.value = reportDate;
+                } else {
+                    dateInput.valueAsDate = new Date();
+                }
             } catch (e) { console.error(e); }
         }
 
@@ -237,6 +255,7 @@
             localStorage.setItem('korkman2_counter', tourIdCounter);
             localStorage.setItem('korkman2_plads', currentPlads);
             localStorage.setItem('korkman2_notes', document.getElementById('notesText').value);
+            localStorage.setItem('korkman2_reportDate', document.getElementById('reportDate').value);
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -310,14 +329,12 @@
             }
         }
 
-        // AKILLI PARSE - Tarih ile başlayan satırları bulur
         function parseSmartLineGrouping(text, debugInfo) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l);
             let added = 0;
 
             debugInfo.innerHTML += `${lines.length} linjer fundet<br>`;
 
-            // Tarih ile başlayan satırların indekslerini bul
             const datePattern = /^\d{1,2}[-/]\d{2}[-/]\d{4}$/;
             const tourStartIndices = [];
 
@@ -329,7 +346,6 @@
 
             debugInfo.innerHTML += `${tourStartIndices.length} ture fundet<br>`;
 
-            // Her turu işle
             for (let i = 0; i < tourStartIndices.length; i++) {
                 if (tours.filter(t => !t.isPause).length >= 20) {
                     debugInfo.innerHTML += 'Max 20 ture nået!<br>';
@@ -345,7 +361,6 @@
                     continue;
                 }
 
-                // Verileri çıkar
                 const date = tourLines[0];
                 const container = tourLines[1] || '';
                 const fraction = tourLines[2] || '';
@@ -358,9 +373,11 @@
                     continue;
                 }
 
-                // Aynı tur kontrolü
+                // Düzeltme: Sadece aynı container, fraktion VE adres olanları kontrol et
+                // Aynı fraksiyon/facility ama farklı adres = farklı tur
                 const exists = tours.some(t => 
                     !t.isPause && 
+                    t.container === container &&
                     t.fraction === fraction && 
                     t.facility === facility && 
                     t.address === address
@@ -379,7 +396,8 @@
                         time: '',
                         isPause: false,
                         isSameDay: false,
-                        plads: currentPlads
+                        plads: currentPlads,
+                        onWay: false
                     });
                     added++;
                     debugInfo.innerHTML += `✓ ${fraction.substring(0, 25)}<br>`;
@@ -413,8 +431,10 @@
 
                 const exists = tours.some(t => 
                     !t.isPause && 
+                    t.container === container &&
                     t.fraction === fraction && 
-                    t.facility === facility
+                    t.facility === facility &&
+                    t.address === address
                 );
 
                 if (!exists) {
@@ -430,7 +450,8 @@
                         time: '',
                         isPause: false,
                         isSameDay: false,
-                        plads: currentPlads
+                        plads: currentPlads,
+                        onWay: false
                     });
                     added++;
                 }
@@ -443,6 +464,9 @@
             tours.sort((a, b) => {
                 if (a.isPause && !b.isPause) return 1;
                 if (!a.isPause && b.isPause) return -1;
+                if (a.onWay && !b.onWay) return -1;
+                if (!a.onWay && b.onWay) return 1;
+                if (a.completed !== b.completed) return a.completed ? 1 : -1;
 
                 const groupA = (a.fraction + '|' + a.facility).toLowerCase();
                 const groupB = (b.fraction + '|' + b.facility).toLowerCase();
@@ -481,7 +505,8 @@
                 time: '',
                 isPause: false,
                 isSameDay: isSameDay,
-                plads: currentPlads
+                plads: currentPlads,
+                onWay: false
             });
 
             ['manualFraction', 'manualFacility', 'manualAddress', 'manualContainer'].forEach(id => {
@@ -511,7 +536,8 @@
                 isPause: true,
                 pauseDuration: '45',
                 isSameDay: false,
-                plads: ''
+                plads: '',
+                onWay: false
             });
             sortAndGroupTours();
             renderTours();
@@ -520,10 +546,26 @@
             showToast('Pause tilføjet!');
         }
 
+        function toggleOnWay(id) {
+            const t = tours.find(x => x.id === id);
+            if (t && !t.completed) {
+                t.onWay = !t.onWay;
+                if (t.onWay) {
+                    t.time = new Date().toTimeString().slice(0, 5);
+                } else {
+                    t.time = '';
+                }
+                sortAndGroupTours();
+                renderTours();
+                updateStats();
+                saveData();
+            }
+        }
+
         function renderTours() {
             const tbody = document.getElementById('toursBody');
             if (!tours.length) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px; color: #9ca3af;">Ingen ture endnu</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #9ca3af;">Ingen ture endnu</td></tr>';
                 updateTourCounter();
                 return;
             }
@@ -534,7 +576,9 @@
             const sorted = [...tours].sort((a, b) => {
                 if (a.isPause && !b.isPause) return 1;
                 if (!a.isPause && b.isPause) return -1;
-                if (a.completed !== b.completed) return b.completed ? 1 : -1;
+                if (a.onWay && !b.onWay) return -1;
+                if (!a.onWay && b.onWay) return 1;
+                if (a.completed !== b.completed) return a.completed ? 1 : -1;
 
                 const groupA = (a.fraction + '|' + a.facility).toLowerCase();
                 const groupB = (b.fraction + '|' + b.facility).toLowerCase();
@@ -545,7 +589,7 @@
             sorted.forEach(t => {
                 if (t.isPause) {
                     html += `<tr class="pause">
-                        <td colspan="2"><strong>☕ PAUSE ${t.pauseDuration} min</strong></td>
+                        <td colspan="3"><strong>☕ PAUSE ${t.pauseDuration} min</strong></td>
                         <td>-</td>
                         <td>-</td>
                         <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
@@ -559,17 +603,21 @@
                 lastGroup = currentGroup;
 
                 const sameDayBadge = t.isSameDay ? '<span class="badge-same-day">SAMME DAG</span>' : '';
+                const containerDisplay = t.container ? `<span class="container-nr">${t.container}</span>` : '';
 
-                html += `<tr class="${t.completed ? 'completed' : ''} ${t.isSameDay ? 'same-day' : ''}" ${showGroupHeader ? 'style="border-top: 2px solid #dc2626;"' : ''}>
+                html += `<tr class="${t.completed ? 'completed' : ''} ${t.isSameDay ? 'same-day' : ''} ${t.onWay ? 'on-way' : ''}" ${showGroupHeader ? 'style="border-top: 2px solid #dc2626;"' : ''}>
                     <td>${t.fraction} ${sameDayBadge}</td>
                     <td>${t.facility}</td>
                     <td>${t.address}</td>
+                    <td>${t.container || '-'}${containerDisplay}</td>
                     <td><input type="number" value="${t.weight}" onchange="updateWeight(${t.id}, this.value)" style="width: 60px;" placeholder="kg"></td>
                     <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
                     <td>
                         ${t.completed 
                             ? `<button class="btn-small btn-undo" onclick="toggleComplete(${t.id})">↩️</button>`
-                            : `<button class="btn-small btn-done" onclick="toggleComplete(${t.id})">✓</button>`
+                            : (t.onWay 
+                                ? `<button class="btn-small btn-on-way" onclick="toggleOnWay(${t.id})">🚛</button>`
+                                : `<button class="btn-small btn-done" onclick="toggleOnWay(${t.id})">På vej</button>`)
                         }
                         <button class="btn-small btn-remove" onclick="removeTour(${t.id})" style="margin-left: 4px;">🗑️</button>
                     </td>
@@ -584,7 +632,15 @@
             const t = tours.find(x => x.id === id);
             if (t) {
                 t.weight = w;
-                if (w && !t.time) t.time = new Date().toTimeString().slice(0, 5);
+                if (w && !t.time) {
+                    t.time = new Date().toTimeString().slice(0, 5);
+                }
+                if (w && t.onWay) {
+                    t.completed = true;
+                    t.onWay = false;
+                    sortAndGroupTours();
+                    renderTours();
+                }
                 updateStats();
                 saveData();
             }
@@ -604,6 +660,7 @@
             if (t) {
                 t.completed = !t.completed;
                 if (t.completed && !t.time) t.time = new Date().toTimeString().slice(0, 5);
+                t.onWay = false;
                 renderTours();
                 updateStats();
                 calculateTotalTime();
@@ -629,9 +686,6 @@
             if (s && e) {
                 let diff = new Date(`2000-01-01T${e}`) - new Date(`2000-01-01T${s}`);
                 if (diff < 0) diff += 24 * 60 * 60 * 1000;
-
-                const pauseMin = tours.filter(t => t.isPause).reduce((sum, t) => sum + (parseInt(t.pauseDuration) || 0), 0);
-                diff -= pauseMin * 60 * 1000;
 
                 h = Math.floor(diff / (1000 * 60 * 60));
                 m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
@@ -675,10 +729,10 @@
             const vehicle = document.getElementById('vehicleReg').value || 'EC25026';
             const start = document.getElementById('startTime').value || '07:00';
             const end = document.getElementById('endTime').value || '';
+            const reportDate = document.getElementById('reportDate').value;
             const time = calculateTotalTime();
             const notes = document.getElementById('notesText').value || '';
 
-            // Header
             doc.setFillColor(220, 38, 38);
             doc.rect(0, 0, 210, 22, 'F');
 
@@ -694,9 +748,8 @@
             doc.setFont('helvetica', 'bold');
             doc.text('KØRSELSRAPPORT', 140, 12);
             doc.setFontSize(9);
-            doc.text(`Dato: ${new Date().toLocaleDateString('da-DK')}`, 140, 17);
+            doc.text(`Dato: ${reportDate ? new Date(reportDate).toLocaleDateString('da-DK') : new Date().toLocaleDateString('da-DK')}`, 140, 17);
 
-            // Info tablosu
             doc.autoTable({
                 startY: 28,
                 body: [
@@ -725,7 +778,6 @@
                 margin: {left: 15, right: 15}
             });
 
-            // Turlar
             const completed = tours.filter(t => t.completed || t.isPause);
             let body = [];
             let tourCount = 0;
@@ -744,13 +796,14 @@
 
                 if (t.isPause) {
                     body.push([
-                        {content: `PAUSE ${t.pauseDuration}min`, colSpan: 5, styles: {fillColor: [254, 243, 199], fontStyle: 'bold', fontSize: 8}}
+                        {content: `PAUSE ${t.pauseDuration}min`, colSpan: 6, styles: {fillColor: [254, 243, 199], fontStyle: 'bold', fontSize: 8}}
                     ]);
                 } else {
                     body.push([
                         {content: t.fraction, styles: {fontSize: 8}},
                         {content: t.facility, styles: {fontSize: 8}},
                         {content: t.address, styles: {fontSize: 8}},
+                        {content: t.container || '', styles: {fontSize: 8}},
                         {content: t.weight ? t.weight + ' kg' : '', styles: {fontSize: 8, fontStyle: 'bold'}},
                         {content: t.time || '', styles: {fontSize: 8}}
                     ]);
@@ -759,22 +812,21 @@
             });
 
             while (tourCount < 20) {
-                body.push([{content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}]);
+                body.push([{content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}]);
                 tourCount++;
             }
 
             doc.autoTable({
                 startY: doc.lastAutoTable.finalY + 5,
-                head: [['FRAKTION', 'AFLÆS. STED', 'ADRESSE', 'VÆGT', 'TIL']],
+                head: [['FRAKTION', 'AFLÆS. STED', 'ADRESSE', 'CONT.', 'VÆGT', 'TIL']],
                 body: body,
                 theme: 'grid',
                 headStyles: {fillColor: [251, 191, 36], textColor: [0, 0, 0], fontSize: 9, fontStyle: 'bold', cellPadding: 3},
                 styles: {fontSize: 8, cellPadding: 2, lineColor: [0, 0, 0], lineWidth: 0.3, minCellHeight: 6},
-                columnStyles: {0: {cellWidth: 40}, 1: {cellWidth: 45}, 2: {cellWidth: 65}, 3: {cellWidth: 20}, 4: {cellWidth: 15}},
+                columnStyles: {0: {cellWidth: 35}, 1: {cellWidth: 40}, 2: {cellWidth: 50}, 3: {cellWidth: 25}, 4: {cellWidth: 20}, 5: {cellWidth: 15}},
                 margin: {left: 15, right: 15}
             });
 
-            // Notlar
             let finalY = doc.lastAutoTable.finalY + 5;
             if (notes.trim()) {
                 doc.setFillColor(251, 191, 36);
@@ -791,7 +843,7 @@
                 doc.text(splitNotes, 17, finalY);
             }
 
-            doc.save(`Korselsrapport_${new Date().toISOString().split('T')[0]}.pdf`);
+            doc.save(`Korselsrapport_${reportDate || new Date().toISOString().split('T')[0]}.pdf`);
             showToast('PDF genereret!');
         }
     </script>
