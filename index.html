@@ -24,6 +24,7 @@
         .data-table tr.pause { background: #fef3c7; }
         .data-table tr.same-day { background: #fee2e2; }
         .data-table tr.on-way { background: #fef3c7; }
+        .data-table tr.new-facility { border-top: 3px solid #dc2626; }
         .data-table input { width: 100%; border: 1px solid #d1d5db; padding: 5px; font-size: 0.8rem; border-radius: 4px; }
         .data-table input:focus { outline: none; border-color: #dc2626; }
         .btn-small { padding: 5px 10px; font-size: 0.75rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; }
@@ -70,7 +71,6 @@
         .debug-info { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px; margin: 10px 15px; font-size: 0.75rem; color: #374151; max-height: 200px; overflow-y: auto; }
         .date-input { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-family: inherit; }
     </style>
-<base target="_blank">
 <base target="_blank">
 </head>
 <body>
@@ -373,8 +373,6 @@
                     continue;
                 }
 
-                // Düzeltme: Sadece aynı container, fraktion VE adres olanları kontrol et
-                // Aynı fraksiyon/facility ama farklı adres = farklı tur
                 const exists = tours.some(t => 
                     !t.isPause && 
                     t.container === container &&
@@ -460,20 +458,32 @@
             return added;
         }
 
-        function sortAndGroupTours() {
-            tours.sort((a, b) => {
+        function getSortedTours() {
+            return [...tours].sort((a, b) => {
                 if (a.isPause && !b.isPause) return 1;
                 if (!a.isPause && b.isPause) return -1;
                 if (a.onWay && !b.onWay) return -1;
                 if (!a.onWay && b.onWay) return 1;
                 if (a.completed !== b.completed) return a.completed ? 1 : -1;
 
-                const groupA = (a.fraction + '|' + a.facility).toLowerCase();
-                const groupB = (b.fraction + '|' + b.facility).toLowerCase();
-
-                if (groupA !== groupB) return groupA.localeCompare(groupB);
+                // ÖNCE facility'e (Aflæs. sted) göre sırala - aynı yerdekiler yan yana
+                const facilityA = (a.facility || '').toLowerCase();
+                const facilityB = (b.facility || '').toLowerCase();
+                
+                if (facilityA !== facilityB) return facilityA.localeCompare(facilityB);
+                
+                // Aynı facility ise fraksiyona göre sırala
+                const fractionA = (a.fraction || '').toLowerCase();
+                const fractionB = (b.fraction || '').toLowerCase();
+                if (fractionA !== fractionB) return fractionA.localeCompare(fractionB);
+                
+                // Son olarak adrese göre sırala
                 return (a.address || '').localeCompare(b.address || '');
             });
+        }
+
+        function sortAndGroupTours() {
+            tours = getSortedTours();
         }
 
         function addManualTour() {
@@ -570,21 +580,10 @@
                 return;
             }
 
-            let lastGroup = '';
+            let lastFacility = '';
             let html = '';
 
-            const sorted = [...tours].sort((a, b) => {
-                if (a.isPause && !b.isPause) return 1;
-                if (!a.isPause && b.isPause) return -1;
-                if (a.onWay && !b.onWay) return -1;
-                if (!a.onWay && b.onWay) return 1;
-                if (a.completed !== b.completed) return a.completed ? 1 : -1;
-
-                const groupA = (a.fraction + '|' + a.facility).toLowerCase();
-                const groupB = (b.fraction + '|' + b.facility).toLowerCase();
-                if (groupA !== groupB) return groupA.localeCompare(groupB);
-                return (a.address || '').localeCompare(b.address || '');
-            });
+            const sorted = getSortedTours();
 
             sorted.forEach(t => {
                 if (t.isPause) {
@@ -598,14 +597,15 @@
                     return;
                 }
 
-                const currentGroup = t.fraction + '|' + t.facility;
-                const showGroupHeader = currentGroup !== lastGroup && lastGroup !== '';
-                lastGroup = currentGroup;
+                // Facility (Aflæs. sted) değiştiğinde çizgi çiz
+                const currentFacility = (t.facility || '').toLowerCase();
+                const isNewFacility = currentFacility !== lastFacility && lastFacility !== '';
+                lastFacility = currentFacility;
 
                 const sameDayBadge = t.isSameDay ? '<span class="badge-same-day">SAMME DAG</span>' : '';
                 const containerDisplay = t.container ? `<span class="container-nr">${t.container}</span>` : '';
 
-                html += `<tr class="${t.completed ? 'completed' : ''} ${t.isSameDay ? 'same-day' : ''} ${t.onWay ? 'on-way' : ''}" ${showGroupHeader ? 'style="border-top: 2px solid #dc2626;"' : ''}>
+                html += `<tr class="${t.completed ? 'completed' : ''} ${t.isSameDay ? 'same-day' : ''} ${t.onWay ? 'on-way' : ''} ${isNewFacility ? 'new-facility' : ''}">
                     <td>${t.fraction} ${sameDayBadge}</td>
                     <td>${t.facility}</td>
                     <td>${t.address}</td>
@@ -781,15 +781,9 @@
             const completed = tours.filter(t => t.completed || t.isPause);
             let body = [];
             let tourCount = 0;
+            let lastPdfFacility = '';
 
-            const sorted = [...completed].sort((a, b) => {
-                if (a.isPause && !b.isPause) return 1;
-                if (!a.isPause && b.isPause) return -1;
-                const groupA = (a.fraction + '|' + a.facility).toLowerCase();
-                const groupB = (b.fraction + '|' + b.facility).toLowerCase();
-                if (groupA !== groupB) return groupA.localeCompare(groupB);
-                return (a.address || '').localeCompare(b.address || '');
-            });
+            const sorted = getSortedTours().filter(t => t.completed || t.isPause);
 
             sorted.forEach(t => {
                 if (tourCount >= 20) return;
@@ -799,13 +793,17 @@
                         {content: `PAUSE ${t.pauseDuration}min`, colSpan: 6, styles: {fillColor: [254, 243, 199], fontStyle: 'bold', fontSize: 8}}
                     ]);
                 } else {
+                    const currentPdfFacility = (t.facility || '').toLowerCase();
+                    const isNewPdfFacility = currentPdfFacility !== lastPdfFacility && lastPdfFacility !== '';
+                    lastPdfFacility = currentPdfFacility;
+                    
                     body.push([
-                        {content: t.fraction, styles: {fontSize: 8}},
-                        {content: t.facility, styles: {fontSize: 8}},
-                        {content: t.address, styles: {fontSize: 8}},
-                        {content: t.container || '', styles: {fontSize: 8}},
-                        {content: t.weight ? t.weight + ' kg' : '', styles: {fontSize: 8, fontStyle: 'bold'}},
-                        {content: t.time || '', styles: {fontSize: 8}}
+                        {content: t.fraction, styles: {fontSize: 8, lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}, 
+                        {content: t.facility, styles: {fontSize: 8, fontStyle: isNewPdfFacility ? 'bold' : 'normal', lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}, 
+                        {content: t.address, styles: {fontSize: 8, lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}, 
+                        {content: t.container || '', styles: {fontSize: 8, lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}, 
+                        {content: t.weight ? t.weight + ' kg' : '', styles: {fontSize: 8, fontStyle: 'bold', lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}, 
+                        {content: t.time || '', styles: {fontSize: 8, lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}
                     ]);
                     tourCount++;
                 }
