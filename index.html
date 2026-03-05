@@ -571,7 +571,7 @@
             <div class="section">
                 <div class="section-header">➕ Tilføj manuel tur</div>
                 <div class="add-form">
-                    <input type="text" id="manualFraction" placeholder="Fraktion (f.eks. Pap)">
+                    <input type="text" id="manualFraction" placeholder="Fraktion (f.eks. Pap, Metal)">
                     <input type="text" id="manualFacility" placeholder="Modtageanlæg (f.eks. Stena)">
                     <input type="text" id="manualAddress" placeholder="Adresse">
                     <input type="text" id="manualContainer" placeholder="Container nr.">
@@ -603,7 +603,7 @@
                                 <th>ADRESSE</th>
                                 <th>CONT.</th>
                                 <th>VÆGT</th>
-                                <th>TID</th>
+                                <th>TIL</th>
                                 <th>✓</th>
                             </tr>
                         </thead>
@@ -1001,7 +1001,7 @@
             doc.setFontSize(9);
             doc.text(`Dato: ${date}`, 130, 19);
             
-            // Info table - Compact
+            // Info table
             doc.autoTable({
                 startY: 26,
                 body: [
@@ -1104,16 +1104,14 @@
                 }
             });
             
-            // Note box at bottom (no signature)
+            // Note box at bottom
             const finalY = doc.lastAutoTable.finalY + 4;
             
-            // Draw note box
             doc.setDrawColor(100, 100, 100);
             doc.setLineWidth(0.5);
             doc.rect(15, finalY, 180, 20);
             
             if (note && note.trim()) {
-                // Has note text
                 doc.setFontSize(7);
                 doc.setTextColor(100, 100, 100);
                 doc.text('NOTE:', 17, finalY + 6);
@@ -1123,7 +1121,6 @@
                 const splitNote = doc.splitTextToSize(note, 175);
                 doc.text(splitNote, 17, finalY + 11);
             } else {
-                // Empty box
                 doc.setFontSize(7);
                 doc.setTextColor(150, 150, 150);
                 doc.text('(Plads til note)', 17, finalY + 10);
