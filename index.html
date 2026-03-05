@@ -6,6 +6,7 @@
     <title>KORKMAN2 - Kørselsrapport</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -16,9 +17,9 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #f0f0f0;
+            background: #f5f5f5;
             min-height: 100vh;
-            font-size: 13px;
+            font-size: 14px;
         }
 
         .container {
@@ -28,88 +29,238 @@
         }
 
         .header {
-            background: #dc2626;
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
             color: white;
-            padding: 12px 15px;
+            padding: 15px;
             text-align: center;
-            border-bottom: 2px solid #991b1b;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
 
         .header h1 {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: 800;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
 
         .header .subtitle {
-            font-size: 0.7rem;
-            opacity: 0.9;
+            font-size: 0.75rem;
+            opacity: 0.95;
+            margin-top: 3px;
         }
 
         .main-content {
-            padding: 10px;
+            padding: 12px;
+            padding-bottom: 80px;
         }
 
         .section {
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             background: white;
-            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
         .section-header {
-            background: #f8f8f8;
-            padding: 8px 12px;
-            border-bottom: 2px solid #dc2626;
+            background: linear-gradient(90deg, #f8f8f8 0%, #fff 100%);
+            padding: 10px 15px;
+            border-left: 4px solid #dc2626;
             font-weight: 700;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             text-transform: uppercase;
             color: #333;
+            letter-spacing: 0.5px;
+        }
+
+        /* Stats Modern */
+        .stats-modern {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 12px;
+            background: white;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: white;
+            padding: 12px 8px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .stat-number {
+            font-size: 1.4rem;
+            font-weight: 800;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .stat-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            opacity: 0.9;
+            letter-spacing: 0.5px;
+        }
+
+        /* Forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            padding: 12px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .form-group.full {
+            grid-column: span 2;
+        }
+
+        .form-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .form-input {
+            padding: 10px 12px;
+            border: 1.5px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            background: #fafafa;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #dc2626;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1);
+        }
+
+        /* Date Picker Special */
+        .date-picker {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #dc2626;
+            text-align: center;
+        }
+
+        /* Image Upload */
+        .upload-area {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #fafafa;
+            margin: 10px;
+            transition: all 0.3s;
+        }
+
+        .upload-area.active {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 8px;
+        }
+
+        .upload-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .upload-btn {
+            background: #dc2626;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        #imageInput {
+            display: none;
+        }
+
+        .ocr-status {
+            padding: 10px;
+            background: #e0f2fe;
+            border-radius: 6px;
+            margin: 10px;
+            font-size: 0.8rem;
+            color: #0369a1;
+            display: none;
+        }
+
+        .ocr-status.processing {
+            display: block;
+        }
+
+        /* Table Premium */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .data-table {
             width: 100%;
-            border-collapse: collapse;
-            font-size: 0.75rem;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.8rem;
         }
 
         .data-table th {
-            background: #fbbf24;
-            padding: 6px 4px;
+            background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 100%);
+            padding: 10px 6px;
             text-align: left;
             font-weight: 700;
-            border: 1px solid #999;
-            font-size: 0.7rem;
+            border-bottom: 2px solid #d97706;
+            font-size: 0.75rem;
             white-space: nowrap;
+            color: #1f2937;
         }
 
         .data-table td {
-            padding: 4px;
-            border: 1px solid #ccc;
+            padding: 8px 6px;
+            border-bottom: 1px solid #e5e7eb;
             vertical-align: middle;
         }
 
-        .data-table tr:nth-child(even) {
-            background: #f9f9f9;
+        .data-table tr:hover {
+            background: #f9fafb;
         }
 
         .data-table tr.completed {
-            background: #dcfce7;
-        }
-
-        .data-table tr.pause {
-            background: #fef3c7;
+            background: #ecfdf5;
         }
 
         .data-table tr.same-day {
-            background: #fee2e2;
+            background: #fef2f2;
+            border-left: 3px solid #dc2626;
         }
 
         .data-table input {
             width: 100%;
-            border: 1px solid #ddd;
-            padding: 4px;
-            font-size: 0.75rem;
-            border-radius: 3px;
+            border: 1.5px solid #d1d5db;
+            padding: 6px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            background: white;
         }
 
         .data-table input:focus {
@@ -117,14 +268,49 @@
             border-color: #dc2626;
         }
 
-        .btn-small {
-            padding: 4px 8px;
-            font-size: 0.7rem;
+        /* Buttons */
+        .btn {
+            padding: 10px 16px;
             border: none;
-            border-radius: 3px;
-            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.85rem;
             font-weight: 600;
-            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(22, 163, 74, 0.3);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .btn-small {
+            padding: 6px 10px;
+            font-size: 0.75rem;
+            border-radius: 4px;
         }
 
         .btn-done {
@@ -137,363 +323,348 @@
             color: white;
         }
 
-        .btn-remove {
-            background: #dc2626;
-            color: white;
-            padding: 2px 6px;
-        }
-
-        .btn-same-day {
-            background: #dc2626;
-            color: white;
-            font-size: 0.6rem;
-            padding: 2px 4px;
-            border-radius: 2px;
-            margin-left: 4px;
-        }
-
-        .form-row {
+        /* Tags */
+        .tag-container {
             display: flex;
-            gap: 8px;
-            padding: 8px 12px;
-            border-bottom: 1px solid #eee;
-            align-items: center;
             flex-wrap: wrap;
-        }
-
-        .form-row label {
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #666;
-            min-width: 60px;
-        }
-
-        .form-input {
-            flex: 1;
-            min-width: 100px;
-            padding: 6px 8px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            font-size: 0.8rem;
-        }
-
-        .paste-box {
-            width: 100%;
-            min-height: 60px;
-            border: 2px dashed #ccc;
-            padding: 8px;
-            font-size: 0.75rem;
-            resize: vertical;
-            font-family: monospace;
-        }
-
-        .toolbar {
-            display: flex;
             gap: 6px;
-            padding: 8px 12px;
-            background: #f8f8f8;
-            border-bottom: 1px solid #ddd;
-            flex-wrap: wrap;
+            padding: 12px;
         }
 
-        .btn {
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
-
-        .btn-primary {
-            background: #dc2626;
-            color: white;
-        }
-
-        .btn-success {
-            background: #16a34a;
-            color: white;
-        }
-
-        .btn-warning {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .btn-info {
-            background: #3b82f6;
-            color: white;
-        }
-
-        .stats-line {
-            display: flex;
-            justify-content: space-around;
-            padding: 10px;
-            background: #1e293b;
-            color: white;
+        .tag {
+            padding: 6px 14px;
+            background: #e5e7eb;
+            border-radius: 20px;
             font-size: 0.8rem;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.2rem;
-            font-weight: 800;
-            display: block;
-        }
-
-        .time-box {
-            text-align: center;
-            padding: 10px;
-            background: #fef2f2;
-            border-top: 1px solid #dc2626;
-        }
-
-        .time-box .label {
-            font-size: 0.7rem;
-            color: #991b1b;
-            text-transform: uppercase;
-        }
-
-        .time-box .value {
-            font-size: 1.3rem;
-            font-weight: 800;
-            color: #dc2626;
-        }
-
-        .plads-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 4px;
-            padding: 8px 12px;
-        }
-
-        .plads-tag {
-            padding: 4px 10px;
-            background: #e5e5e5;
-            border-radius: 12px;
-            font-size: 0.7rem;
             cursor: pointer;
-            border: 1px solid transparent;
+            transition: all 0.2s;
+            border: 2px solid transparent;
         }
 
-        .plads-tag.active {
+        .tag:hover {
+            background: #d1d5db;
+        }
+
+        .tag.active {
             background: #dc2626;
             color: white;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
         }
 
+        /* Add Tour Form */
+        .add-form {
+            display: grid;
+            gap: 10px;
+            padding: 12px;
+            background: linear-gradient(180deg, #f0f9ff 0%, #fff 100%);
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: #fef2f2;
+            border-radius: 6px;
+            border: 1px solid #fecaca;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #dc2626;
+        }
+
+        .checkbox-wrapper label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #991b1b;
+        }
+
+        /* Note Area */
+        .note-area {
+            width: 100%;
+            min-height: 80px;
+            border: 1.5px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 0.9rem;
+            resize: vertical;
+        }
+
+        /* PDF Footer */
         .pdf-footer {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             background: white;
-            padding: 10px;
-            border-top: 2px solid #ddd;
-            text-align: center;
+            padding: 12px 15px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
         }
 
         .pdf-footer .btn {
-            width: 100%;
-            padding: 12px;
+            flex: 1;
+            padding: 14px;
             font-size: 0.9rem;
         }
 
-        .content-area {
-            padding-bottom: 70px;
-        }
-
-        .col-fraction { width: 18%; }
-        .col-facility { width: 20%; }
-        .col-address { width: 22%; }
-        .col-container { width: 12%; }
-        .col-weight { width: 10%; }
-        .col-time { width: 10%; }
-        .col-action { width: 8%; }
-
-        .badge {
-            display: inline-block;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 0.65rem;
-            font-weight: 700;
-        }
-
-        .badge-same-day {
-            background: #dc2626;
-            color: white;
-        }
-
+        /* Toast */
         .toast {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.8);
+            background: rgba(0,0,0,0.85);
             color: white;
-            padding: 12px 20px;
-            border-radius: 6px;
-            font-size: 0.85rem;
+            padding: 16px 24px;
+            border-radius: 10px;
+            font-size: 0.9rem;
             opacity: 0;
             transition: opacity 0.3s;
             z-index: 1000;
             pointer-events: none;
+            text-align: center;
         }
 
         .toast.show {
             opacity: 1;
         }
 
-        .table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .add-tour-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            padding: 10px;
-            background: #f0f9ff;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .add-tour-form input {
-            padding: 6px;
-            border: 1px solid #ccc;
-            border-radius: 3px;
-            font-size: 0.8rem;
-        }
-
-        .checkbox-label {
-            display: flex;
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 100;
             align-items: center;
-            gap: 4px;
-            font-size: 0.75rem;
-            grid-column: span 2;
+            justify-content: center;
+            padding: 20px;
         }
 
-        .checkbox-label input[type="checkbox"] {
-            width: auto;
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #dc2626;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .ocr-text {
+            background: #f3f4f6;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+        }
+
+        .col-fraction { min-width: 100px; }
+        .col-facility { min-width: 110px; }
+        .col-address { min-width: 130px; }
+        .col-container { min-width: 80px; }
+        .col-weight { min-width: 70px; }
+        .col-time { min-width: 75px; }
+        .col-action { min-width: 50px; }
+
+        .badge-same {
+            background: #dc2626;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            margin-left: 4px;
+        }
+
+        @media (max-width: 375px) {
+            .stats-modern {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>KORKMAN2</h1>
-            <div class="subtitle">ILK Company ApS - Kørselsrapport</div>
+            <h1>🚛 KORKMAN2</h1>
+            <div class="subtitle">ILK Company ApS - Professionel Kørselsrapport</div>
         </div>
 
         <div class="main-content">
             <!-- Stats -->
-            <div class="stats-line">
-                <div class="stat-item">
-                    <span class="stat-value" id="totalTours">0</span>
-                    <span>Ture</span>
+            <div class="stats-modern">
+                <div class="stat-box">
+                    <span class="stat-number" id="totalTours">0</span>
+                    <span class="stat-label">Ture</span>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="completedTours">0</span>
-                    <span>Færdig</span>
+                <div class="stat-box">
+                    <span class="stat-number" id="completedTours">0</span>
+                    <span class="stat-label">Færdig</span>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="totalWeight">0</span>
-                    <span>Kg</span>
+                <div class="stat-box">
+                    <span class="stat-number" id="totalWeight">0</span>
+                    <span class="stat-label">Kg</span>
                 </div>
-                <div class="stat-item">
-                    <span class="stat-value" id="totalTime">0t</span>
-                    <span>Timer</span>
+                <div class="stat-box">
+                    <span class="stat-number" id="totalTime">0t</span>
+                    <span class="stat-label">Timer</span>
+                </div>
+            </div>
+
+            <!-- Tarih Seçimi -->
+            <div class="section">
+                <div class="section-header">📅 Vælg Dato</div>
+                <div style="padding: 15px;">
+                    <input type="date" class="form-input date-picker" id="reportDate" 
+                           value="${new Date().toISOString().split('T')[0]}">
                 </div>
             </div>
 
             <!-- Chauffør Info -->
             <div class="section">
-                <div class="section-header">Chauffør Information</div>
-                <div class="form-row">
-                    <label>Navn:</label>
-                    <input type="text" class="form-input" id="driverName" value="Ferdat Turan">
-                    <label>Vogn:</label>
-                    <input type="text" class="form-input" id="vehicleReg" value="EC25026" style="width: 80px;">
+                <div class="section-header">👤 Chauffør Information</div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Chauffør Navn</label>
+                        <input type="text" class="form-input" id="driverName" value="Ferdat Turan">
+                    </div>
+                    <div class="form-group">
+                        <label>Vogn Nummer</label>
+                        <input type="text" class="form-input" id="vehicleReg" value="EC25026">
+                    </div>
+                    <div class="form-group">
+                        <label>Start Tid</label>
+                        <input type="time" class="form-input" id="startTime" value="07:00" onchange="calculateTotalTime()">
+                    </div>
+                    <div class="form-group">
+                        <label>Slut Tid</label>
+                        <input type="time" class="form-input" id="endTime" onchange="calculateTotalTime()">
+                    </div>
                 </div>
-                <div class="form-row">
-                    <label>Start:</label>
-                    <input type="time" class="form-input" id="startTime" value="07:00" onchange="calculateTotalTime()" style="width: 80px;">
-                    <label>Slut:</label>
-                    <input type="time" class="form-input" id="endTime" onchange="calculateTotalTime()" style="width: 80px;">
-                </div>
-                <div class="time-box">
-                    <div class="label">Total arbejdstid</div>
-                    <div class="value" id="timeDisplay">0t 0m</div>
+                <div style="padding: 15px; background: linear-gradient(90deg, #fef2f2 0%, #fff 100%); border-top: 1px solid #fecaca;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 0.75rem; color: #991b1b; text-transform: uppercase; font-weight: 600;">Total Arbejdstid</div>
+                        <div style="font-size: 1.6rem; font-weight: 800; color: #dc2626;" id="timeDisplay">0t 0m</div>
+                    </div>
                 </div>
             </div>
 
             <!-- Plads -->
             <div class="section">
-                <div class="section-header">Plads / Område</div>
-                <div class="plads-tags">
-                    <span class="plads-tag" onclick="setPlads('Glostrup')">Glostrup</span>
-                    <span class="plads-tag" onclick="setPlads('Herlev')">Herlev</span>
-                    <span class="plads-tag" onclick="setPlads('Hillerød')">Hillerød</span>
-                    <span class="plads-tag" onclick="setPlads('Ballerup')">Ballerup</span>
-                    <span class="plads-tag" onclick="setPlads('Skipstrup')">Skipstrup</span>
-                    <span class="plads-tag" onclick="setPlads('Helsingør')">Helsingør</span>
+                <div class="section-header">📍 Plads / Område</div>
+                <div class="tag-container">
+                    <span class="tag" onclick="setPlads('Glostrup')">Glostrup</span>
+                    <span class="tag" onclick="setPlads('Herlev')">Herlev</span>
+                    <span class="tag" onclick="setPlads('Hillerød')">Hillerød</span>
+                    <span class="tag" onclick="setPlads('Ballerup')">Ballerup</span>
+                    <span class="tag" onclick="setPlads('Skipstrup')">Skipstrup</span>
+                    <span class="tag" onclick="setPlads('Helsingør')">Helsingør</span>
                 </div>
-                <div class="form-row">
-                    <label>Andet:</label>
-                    <input type="text" class="form-input" id="customPlads" placeholder="Skriv plads..." onchange="currentPlads = this.value">
+                <div style="padding: 12px;">
+                    <input type="text" class="form-input" id="customPlads" placeholder="Andet plads..." onchange="currentPlads = this.value">
                 </div>
             </div>
 
-            <!-- Mail Input -->
+            <!-- Fotoğraf ile Ekleme (OCR) -->
             <div class="section">
-                <div class="section-header">Indsæt ture fra mail</div>
-                <div style="padding: 8px 12px;">
-                    <textarea class="paste-box" id="pasteArea" placeholder="Kopier tabel fra mail og indsæt her..."></textarea>
+                <div class="section-header">📸 Indsæt fra billede (OCR)</div>
+                <div class="upload-area" onclick="document.getElementById('imageInput').click()" id="uploadArea">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">Tryk her for at tage foto eller vælg billede<br><small>Vi læser automatisk tabellen</small></div>
+                    <button class="upload-btn">Vælg Billede</button>
                 </div>
-                <div class="toolbar">
-                    <button class="btn btn-primary" onclick="parsePastedData()">+ Tilføj ture</button>
+                <input type="file" id="imageInput" accept="image/*" onchange="handleImage(event)">
+                <div class="ocr-status" id="ocrStatus">
+                    ⏳ Læser billede... Vent venligst
+                </div>
+            </div>
+
+            <!-- Manuel Input -->
+            <div class="section">
+                <div class="section-header">⌨️ Indsæt tekst fra mail</div>
+                <div style="padding: 12px;">
+                    <textarea class="form-input" id="pasteArea" rows="3" placeholder="Kopier og indsæt tabel tekst her..."></textarea>
+                </div>
+                <div style="padding: 0 12px 12px; display: flex; gap: 8px;">
+                    <button class="btn btn-primary" onclick="parsePastedData()">Tilføj Ture</button>
                     <button class="btn btn-warning" onclick="addPause()">+ Pause</button>
-                    <button class="btn" onclick="clearAll()" style="background: #666; color: white;">Slet alt</button>
                 </div>
             </div>
 
             <!-- Manuel Tur Ekleme -->
             <div class="section">
-                <div class="section-header">Tilføj ny tur manuelt</div>
-                <div class="add-tour-form">
-                    <input type="text" id="manualFraction" placeholder="Fraktion (f.eks. Pap, Metal)">
+                <div class="section-header">➕ Tilføj manuel tur</div>
+                <div class="add-form">
+                    <input type="text" id="manualFraction" placeholder="Fraktion (f.eks. Pap)">
                     <input type="text" id="manualFacility" placeholder="Modtageanlæg (f.eks. Stena)">
                     <input type="text" id="manualAddress" placeholder="Adresse">
                     <input type="text" id="manualContainer" placeholder="Container nr.">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="sameDayOrder"> Samme dags bestilling (rød markering)
-                    </label>
-                    <button class="btn btn-info" onclick="addManualTour()" style="grid-column: span 2;">Tilføj tur</button>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="sameDayOrder">
+                        <label>Samme dags bestilling (rød markering)</label>
+                    </div>
+                    <button class="btn btn-info" onclick="addManualTour()">Tilføj Tur</button>
+                </div>
+            </div>
+
+            <!-- PDF Notu -->
+            <div class="section">
+                <div class="section-header">📝 Note til PDF</div>
+                <div style="padding: 12px;">
+                    <textarea class="note-area" id="pdfNote" placeholder="Skriv din note her... Denne note vises i PDF rapporten i stedet for den røde kasse."></textarea>
                 </div>
             </div>
 
             <!-- Tur Listesi -->
-            <div class="section content-area">
-                <div class="section-header">Dagens ture</div>
-                <div class="table-wrapper" id="toursTable">
+            <div class="section">
+                <div class="section-header">📋 Dagens Ture</div>
+                <div class="table-container">
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th class="col-fraction">FRAKTION</th>
-                                <th class="col-facility">AFLÆS. STED</th>
-                                <th class="col-address">ADRESSE</th>
-                                <th class="col-container">CONT.</th>
-                                <th class="col-weight">VÆGT</th>
-                                <th class="col-time">TID</th>
-                                <th class="col-action">OK</th>
+                                <th>FRAKTION</th>
+                                <th>AFLÆS. STED</th>
+                                <th>ADRESSE</th>
+                                <th>CONT.</th>
+                                <th>VÆGT</th>
+                                <th>TID</th>
+                                <th>✓</th>
                             </tr>
                         </thead>
                         <tbody id="toursBody">
                             <tr>
-                                <td colspan="7" style="text-align: center; padding: 30px; color: #999;">
+                                <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
+                                    <div style="font-size: 2rem; margin-bottom: 10px;">📋</div>
                                     Ingen ture endnu
                                 </td>
                             </tr>
@@ -503,10 +674,24 @@
             </div>
         </div>
 
+        <!-- Footer -->
         <div class="pdf-footer">
-            <button class="btn btn-success" onclick="generatePDF()">
-                📄 Generer PDF Rapport
-            </button>
+            <button class="btn" onclick="clearAll()" style="background: #6b7280; color: white; flex: 0.5;">Slet</button>
+            <button class="btn btn-success" onclick="generatePDF()" style="flex: 1.5;">📄 Generer PDF</button>
+        </div>
+    </div>
+
+    <!-- OCR Modal -->
+    <div class="modal" id="ocrModal">
+        <div class="modal-content">
+            <div class="modal-header">Bekræft OCR Resultat</div>
+            <img id="previewImage" class="preview-image">
+            <div style="font-size: 0.8rem; color: #666; margin-bottom: 10px;">Genkendt tekst:</div>
+            <div class="ocr-text" id="ocrText"></div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn" onclick="closeModal()" style="flex: 1; background: #6b7280; color: white;">Annuller</button>
+                <button class="btn btn-primary" onclick="confirmOCR()" style="flex: 1;">Tilføj Ture</button>
+            </div>
         </div>
     </div>
 
@@ -516,6 +701,10 @@
         let tours = JSON.parse(localStorage.getItem('korkman2_tours')) || [];
         let tourIdCounter = tours.length > 0 ? Math.max(...tours.map(t => t.id)) + 1 : 1;
         let currentPlads = '';
+        let lastOCRText = '';
+
+        // Set today's date
+        document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
 
         document.addEventListener('DOMContentLoaded', () => {
             renderTours();
@@ -528,15 +717,62 @@
             const t = document.getElementById('toast');
             t.textContent = msg;
             t.classList.add('show');
-            setTimeout(() => t.classList.remove('show'), 2000);
+            setTimeout(() => t.classList.remove('show'), 2500);
         }
 
         function setPlads(p) {
             currentPlads = p;
-            document.querySelectorAll('.plads-tag').forEach(t => {
+            document.querySelectorAll('.tag').forEach(t => {
                 t.classList.toggle('active', t.textContent === p);
             });
             document.getElementById('customPlads').value = '';
+        }
+
+        // OCR Image Handling
+        async function handleImage(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const status = document.getElementById('ocrStatus');
+            const uploadArea = document.getElementById('uploadArea');
+            
+            status.classList.add('processing');
+            uploadArea.classList.add('active');
+            showToast('Læser billede...');
+
+            try {
+                const result = await Tesseract.recognize(file, 'dan', {
+                    logger: m => console.log(m)
+                });
+
+                lastOCRText = result.data.text;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = e => {
+                    document.getElementById('previewImage').src = e.target.result;
+                    document.getElementById('ocrText').textContent = lastOCRText;
+                    document.getElementById('ocrModal').classList.add('active');
+                };
+                reader.readAsDataURL(file);
+
+            } catch (err) {
+                showToast('Fejl ved læsning af billede');
+                console.error(err);
+            } finally {
+                status.classList.remove('processing');
+                uploadArea.classList.remove('active');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('ocrModal').classList.remove('active');
+        }
+
+        function confirmOCR() {
+            document.getElementById('pasteArea').value = lastOCRText;
+            closeModal();
+            parsePastedData();
         }
 
         function sortByAddress(list) {
@@ -548,17 +784,24 @@
             if (!text) return showToast('Indsæt data først!');
 
             let added = 0;
-            text.split('\n').filter(l => l.trim()).forEach(line => {
-                const cells = line.split(/\t|,{2,}|  +/).map(c => c.trim()).filter(c => c);
-                if (cells.length >= 6) {
+            const lines = text.split('\n').filter(l => l.trim());
+            
+            lines.forEach(line => {
+                // Try to parse various formats
+                const cells = line.split(/\t|  +/).map(c => c.trim()).filter(c => c);
+                
+                if (cells.length >= 4) {
+                    // Detect if it's a date format or just data
+                    const hasDate = /^\d{2}[-/.]\d{2}[-/.]\d{4}/.test(cells[0]);
+                    
                     tours.push({
                         id: tourIdCounter++,
-                        date: cells[0] || new Date().toLocaleDateString('da-DK'),
-                        container: cells[1] || '',
-                        fraction: cells[2] || '',
-                        facility: cells[4] || '',
-                        address: cells[5] || '',
-                        note: cells[8] || '',
+                        date: hasDate ? cells[0] : document.getElementById('reportDate').value,
+                        container: hasDate ? cells[1] : cells[0],
+                        fraction: hasDate ? cells[2] : cells[1],
+                        facility: hasDate ? (cells[4] || cells[3]) : (cells[2] || ''),
+                        address: hasDate ? (cells[5] || '') : (cells[3] || ''),
+                        note: '',
                         completed: false,
                         weight: '',
                         time: '',
@@ -576,6 +819,8 @@
                 renderTours();
                 updateStats();
                 showToast(`${added} ture tilføjet!`);
+            } else {
+                showToast('Kunne ikke genkende data format');
             }
         }
 
@@ -592,7 +837,7 @@
 
             tours.push({
                 id: tourIdCounter++,
-                date: new Date().toLocaleDateString('da-DK'),
+                date: document.getElementById('reportDate').value,
                 container: container || '-',
                 fraction: fraction,
                 facility: facility,
@@ -622,7 +867,7 @@
         function addPause() {
             tours.push({
                 id: tourIdCounter++,
-                date: new Date().toLocaleDateString('da-DK'),
+                date: document.getElementById('reportDate').value,
                 container: '',
                 fraction: 'PAUSE',
                 facility: 'Pause',
@@ -643,7 +888,13 @@
         function renderTours() {
             const tbody = document.getElementById('toursBody');
             if (!tours.length) {
-                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 30px; color: #999;">Ingen ture endnu</td></tr>';
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px; color: #999;">
+                            <div style="font-size: 2rem; margin-bottom: 10px;">📋</div>
+                            Ingen ture endnu
+                        </td>
+                    </tr>`;
                 return;
             }
 
@@ -652,33 +903,34 @@
             const sorted = [...sortByAddress(completed), ...sortByAddress(pending)];
 
             tbody.innerHTML = sorted.map(t => {
-                const sameDayBadge = t.isSameDay ? '<span class="badge badge-same-day">SAMME DAG</span>' : '';
+                const sameDayBadge = t.isSameDay ? '<span class="badge-same">SAMME DAG</span>' : '';
                 
                 if (t.isPause) {
-                    return `<tr class="pause">
-                        <td colspan="2"><strong>☕ PAUSE ${t.pauseDuration} min</strong></td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
-                        <td><button class="btn-small btn-remove" onclick="removeTour(${t.id})">🗑️</button></td>
-                    </tr>`;
+                    return `
+                        <tr style="background: #fef3c7;">
+                            <td colspan="2"><strong>☕ PAUSE ${t.pauseDuration} min</strong></td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td>-</td>
+                            <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)"></td>
+                            <td><button class="btn-small btn-undo" onclick="removeTour(${t.id})">🗑️</button></td>
+                        </tr>`;
                 }
 
-                return `<tr class="${t.completed ? 'completed' : ''} ${t.isSameDay ? 'same-day' : ''}">
-                    <td>${t.fraction} ${sameDayBadge}</td>
-                    <td>${t.facility}</td>
-                    <td>${t.address}</td>
-                    <td>${t.container}</td>
-                    <td><input type="number" placeholder="0" value="${t.weight}" onchange="updateWeight(${t.id}, this.value)" style="width: 60px;"></td>
-                    <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
-                    <td>
-                        ${t.completed 
-                            ? `<button class="btn-small btn-undo" onclick="toggleComplete(${t.id})">↩️</button>`
-                            : `<button class="btn-small btn-done" onclick="toggleComplete(${t.id})">✓</button>`
-                        }
-                    </td>
-                </tr>`;
+                return `
+                    <tr class="${t.completed ? 'completed' : ''} ${t.isSameDay ? 'same-day' : ''}">
+                        <td><strong>${t.fraction}</strong>${sameDayBadge}</td>
+                        <td>${t.facility}</td>
+                        <td>${t.address}</td>
+                        <td>${t.container}</td>
+                        <td><input type="number" placeholder="0" value="${t.weight}" onchange="updateWeight(${t.id}, this.value)"></td>
+                        <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)"></td>
+                        <td>
+                            <button class="btn-small ${t.completed ? 'btn-undo' : 'btn-done'}" onclick="toggleComplete(${t.id})">
+                                ${t.completed ? '↩️' : '✓'}
+                            </button>
+                        </td>
+                    </tr>`;
             }).join('');
         }
 
@@ -731,13 +983,14 @@
             const h = Math.floor(diff / (1000 * 60 * 60));
             const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             document.getElementById('timeDisplay').textContent = `${h}t ${m}m`;
-            return { h, m };
+            return { h, m, totalMin: h * 60 + m };
         }
 
         function updateStats() {
             const total = tours.filter(t => !t.isPause).length;
             const done = tours.filter(t => t.completed && !t.isPause).length;
-            const w = tours.filter(t => t.completed && !t.isPause && t.weight).reduce((s, t) => s + (parseFloat(t.weight) || 0), 0);
+            const w = tours.filter(t => t.completed && !t.isPause && t.weight)
+                          .reduce((s, t) => s + (parseFloat(t.weight) || 0), 0);
             
             document.getElementById('totalTours').textContent = total;
             document.getElementById('completedTours').textContent = done;
@@ -758,6 +1011,7 @@
             }
         }
 
+        // PROFESSIONAL PDF GENERATION
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
@@ -766,120 +1020,236 @@
             const vehicle = document.getElementById('vehicleReg').value || 'EC25026';
             const start = document.getElementById('startTime').value || '07:00';
             const end = document.getElementById('endTime').value || '';
+            const dateVal = document.getElementById('reportDate').value;
+            const date = dateVal ? new Date(dateVal).toLocaleDateString('da-DK') : new Date().toLocaleDateString('da-DK');
+            const note = document.getElementById('pdfNote').value;
             const time = calculateTotalTime();
+            const timeStr = time ? `${time.h}t ${time.m}m` : '';
             
-            // Header
+            // === HEADER SECTION ===
+            // Red box with logo
             doc.setFillColor(220, 38, 38);
-            doc.rect(20, 15, 50, 18, 'F');
+            doc.rect(15, 10, 60, 22, 'F');
+            
+            // Logo text
             doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text('KORKMAN2', 18, 23);
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.text('ILK Company ApS', 18, 28);
+            
+            // Report title
+            doc.setTextColor(0, 0, 0);
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
-            doc.text('KORKMAN2', 23, 27);
-            doc.setFontSize(8);
-            doc.text('ILK Company ApS', 23, 31);
+            doc.text('KØRSELSRAPPORT', 130, 18);
             
-            doc.setTextColor(0, 0, 0);
-            doc.setFontSize(14);
-            doc.text('KØRSELSRAPPORT', 140, 24);
+            // Date
             doc.setFontSize(10);
-            doc.text(`Dato: ${new Date().toLocaleDateString('da-DK')}`, 140, 30);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Dato: ${date}`, 130, 25);
             
-            // Info table
-            doc.autoTable({
-                startY: 38,
-                body: [
-                    [{content: 'CHAUFFØR NAVN', styles: {fillColor: [240,240,240]}}, driver, 
-                     {content: 'VOGN NR.', styles: {fillColor: [240,240,240]}}, vehicle],
-                    [{content: 'START TID', styles: {fillColor: [240,240,240]}}, start,
-                     {content: 'SLUT TID', styles: {fillColor: [240,240,240]}}, end],
-                    [{content: 'PLADS', styles: {fillColor: [240,240,240]}}, currentPlads || '-',
-                     {content: 'TID I ALT', styles: {fillColor: [240,240,240]}}, 
-                     {content: time ? `${time.h}t ${time.m}m` : '', styles: {textColor: [200,0,0]}}]
+            // === INFO TABLE ===
+            const infoRows = [
+                [
+                    { content: 'CHAUFFØR NAVN', styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } },
+                    { content: driver, styles: { fontStyle: 'italic' } },
+                    { content: 'VOGN NR. / REG.NR.', styles: { fillColor: [230, 230, 230], fontStyle: 'bold', textColor: [0, 128, 0] } },
+                    { content: vehicle, styles: { textColor: [0, 128, 0], fontStyle: 'bold' } }
                 ],
-                theme: 'grid',
-                styles: {fontSize: 9, cellPadding: 4},
-                columnStyles: {0: {cellWidth: 35}, 1: {cellWidth: 50}, 2: {cellWidth: 25}, 3: {cellWidth: 40}}
-            });
-            
-            // Tours table - YENİ FORMAT
-            const completed = tours.filter(t => t.completed || t.isPause);
-            let body = [];
-            
-            // Başlık satırı (Plads adı)
-            if (currentPlads) {
-                body.push([{content: currentPlads.toUpperCase(), colSpan: 6, styles: {fillColor: [254, 243, 199], fontStyle: 'bold', fontSize: 10}}]);
-            }
-            
-            completed.forEach(t => {
-                if (t.isPause) {
-                    // Pause satırı - yeşil arka plan
-                    body.push([
-                        {content: `PAUSE ${t.pauseDuration}`, styles: {fillColor: [220, 252, 231], fontStyle: 'bold'}},
-                        {content: '', styles: {fillColor: [220, 252, 231]}},
-                        {content: '', styles: {fillColor: [220, 252, 231]}},
-                        {content: '', styles: {fillColor: [220, 252, 231]}},
-                        {content: t.time || '', styles: {fillColor: [220, 252, 231]}},
-                        {content: '', styles: {fillColor: [220, 252, 231]}}
-                    ]);
-                } else {
-                    // Normal tur satırı
-                    // Samme dags bestilling = rød baggrund
-                    const isSameDay = t.isSameDay;
-                    const rowStyle = isSameDay ? {fillColor: [254, 226, 226]} : {};
-                    
-                    body.push([
-                        {content: t.fraction, styles: rowStyle},           // 1. Fraktion (ne olduğu)
-                        {content: t.facility, styles: rowStyle},           // 2. Modtageanlæg (gideceği yer)
-                        {content: t.address, styles: rowStyle},            // 3. Adresse
-                        {content: t.weight ? `${t.weight} kg` : '', styles: {...rowStyle, fillColor: isSameDay ? [254, 226, 226] : [220, 252, 231]}}, // 4. Vægt (yeşil)
-                        {content: t.time || '', styles: {...rowStyle, fillColor: isSameDay ? [254, 226, 226] : [240, 240, 240]}}, // 5. Tid (gri)
-                        {content: '', styles: rowStyle}                     // 6. Netpå (boş)
-                    ]);
-                }
-            });
-            
-            // Boş satırlar doldur (en az 15 satır olsun)
-            while (body.length < 15) {
-                body.push(['', '', '', '', '', '']);
-            }
+                [
+                    { content: 'START TID', styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } },
+                    { content: start, styles: { textColor: [0, 128, 0], fontStyle: 'bold' } },
+                    { content: 'SLUT TID', styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } },
+                    { content: end, styles: { textColor: [0, 128, 0], fontStyle: 'bold' } }
+                ],
+                [
+                    { content: 'PLADS', styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } },
+                    { content: currentPlads || '-', styles: {} },
+                    { content: 'TID I ALT', styles: { fillColor: [230, 230, 230], fontStyle: 'bold' } },
+                    { content: timeStr, styles: { textColor: [200, 0, 0], fontStyle: 'bold' } }
+                ]
+            ];
             
             doc.autoTable({
-                startY: doc.lastAutoTable.finalY + 5,
-                head: [['FRAKTION', 'AFLÆS. STED', 'ADRESSE', 'VÆGT', 'TIL', 'NETPÅ']],
-                body: body,
+                startY: 35,
+                body: infoRows,
                 theme: 'grid',
-                headStyles: { 
-                    fillColor: [251, 191, 36], 
-                    textColor: [0, 0, 0], 
-                    fontSize: 9,
-                    fontStyle: 'bold'
-                },
-                styles: {
-                    fontSize: 8, 
-                    cellPadding: 4,
-                    lineColor: [0, 0, 0],
+                styles: { 
+                    fontSize: 9, 
+                    cellPadding: 5,
+                    lineColor: [100, 100, 100],
                     lineWidth: 0.5
                 },
                 columnStyles: {
-                    0: {cellWidth: 30},  // Fraktion
-                    1: {cellWidth: 40},  // Aflæs. sted
-                    2: {cellWidth: 45},  // Adresse
-                    3: {cellWidth: 20},  // Vægt
-                    4: {cellWidth: 20},  // Til
-                    5: {cellWidth: 15}   // Netpå
+                    0: { cellWidth: 40 },
+                    1: { cellWidth: 55 },
+                    2: { cellWidth: 30 },
+                    3: { cellWidth: 45 }
                 }
             });
             
-            // Footer note - rød kasse
-            const y = doc.lastAutoTable.finalY + 5;
-            doc.setDrawColor(200, 0, 0);
-            doc.setLineWidth(0.5);
-            doc.rect(20, y, 170, 12);
-            doc.setTextColor(200, 0, 0);
-            doc.setFontSize(9);
-            doc.text('Container med rød mærke bestilling af samme dag', 25, y + 7);
+            // === TOURS TABLE ===
+            const completed = tours.filter(t => t.completed || t.isPause);
             
-            doc.save(`Korselsrapport_${new Date().toISOString().split('T')[0]}.pdf`);
+            let bodyData = [];
+            
+            // Plads header
+            if (currentPlads) {
+                bodyData.push([
+                    { 
+                        content: currentPlads.toUpperCase(), 
+                        colSpan: 6, 
+                        styles: { 
+                            fillColor: [254, 240, 200], 
+                            fontStyle: 'bold',
+                            fontSize: 10,
+                            halign: 'center'
+                        } 
+                    }
+                ]);
+            }
+            
+            // Data rows
+            completed.forEach(t => {
+                if (t.isPause) {
+                    // Pause row - light green
+                    bodyData.push([
+                        { 
+                            content: `PAUSE ${t.pauseDuration}`, 
+                            styles: { 
+                                fillColor: [220, 252, 231], 
+                                fontStyle: 'bold',
+                                textColor: [0, 100, 0]
+                            } 
+                        },
+                        { content: '', styles: { fillColor: [220, 252, 231] } },
+                        { content: '', styles: { fillColor: [220, 252, 231] } },
+                        { content: '', styles: { fillColor: [220, 252, 231] } },
+                        { content: t.time || '', styles: { fillColor: [220, 252, 231] } },
+                        { content: '', styles: { fillColor: [220, 252, 231] } }
+                    ]);
+                } else {
+                    // Normal tour
+                    const isSameDay = t.isSameDay;
+                    const bgColor = isSameDay ? [254, 226, 226] : [255, 255, 255];
+                    const textColor = isSameDay ? [150, 0, 0] : [0, 0, 0];
+                    
+                    bodyData.push([
+                        { 
+                            content: t.fraction, 
+                            styles: { 
+                                fillColor: bgColor,
+                                textColor: textColor,
+                                fontStyle: isSameDay ? 'bold' : 'normal'
+                            } 
+                        },
+                        { 
+                            content: t.facility, 
+                            styles: { fillColor: bgColor, textColor: textColor } 
+                        },
+                        { 
+                            content: t.address, 
+                            styles: { fillColor: bgColor, textColor: textColor } 
+                        },
+                        { 
+                            content: t.container, 
+                            styles: { fillColor: bgColor, textColor: textColor } 
+                        },
+                        { 
+                            content: t.weight ? `${t.weight} kg` : '', 
+                            styles: { 
+                                fillColor: isSameDay ? [254, 226, 226] : [220, 252, 231],
+                                fontStyle: 'bold',
+                                halign: 'right'
+                            } 
+                        },
+                        { 
+                            content: t.time || '', 
+                            styles: { 
+                                fillColor: isSameDay ? [254, 226, 226] : [240, 240, 240],
+                                halign: 'center'
+                            } 
+                        }
+                    ]);
+                }
+            });
+            
+            // Empty rows to fill page
+            while (bodyData.length < 18) {
+                bodyData.push(['', '', '', '', '', '']);
+            }
+            
+            // Draw table
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 8,
+                head: [['FRAKTION', 'AFLÆS. STED', 'ADRESSE', 'CONTAINE', 'VÆGT', 'TIL']],
+                body: bodyData,
+                theme: 'grid',
+                headStyles: { 
+                    fillColor: [251, 191, 36],
+                    textColor: [0, 0, 0],
+                    fontSize: 9,
+                    fontStyle: 'bold',
+                    halign: 'left'
+                },
+                styles: {
+                    fontSize: 8.5,
+                    cellPadding: 4,
+                    lineColor: [80, 80, 80],
+                    lineWidth: 0.4,
+                    valign: 'middle'
+                },
+                columnStyles: {
+                    0: { cellWidth: 32 },  // Fraktion
+                    1: { cellWidth: 42 },  // Aflæs. sted
+                    2: { cellWidth: 48 },  // Adresse
+                    3: { cellWidth: 22 },  // Containe
+                    4: { cellWidth: 20, halign: 'right' },  // Vægt
+                    5: { cellWidth: 18, halign: 'center' }   // Til
+                },
+                alternateRowStyles: {
+                    fillColor: [250, 250, 250]
+                }
+            });
+            
+            // === NOTE SECTION (Custom or Default) ===
+            const finalY = doc.lastAutoTable.finalY + 5;
+            
+            if (note && note.trim()) {
+                // Custom note
+                doc.setDrawColor(100, 100, 100);
+                doc.setLineWidth(0.5);
+                doc.rect(15, finalY, 180, 20);
+                
+                doc.setFontSize(9);
+                doc.setTextColor(50, 50, 50);
+                doc.text('NOTE:', 18, finalY + 7);
+                
+                doc.setFontSize(8);
+                doc.setTextColor(0, 0, 0);
+                const splitNote = doc.splitTextToSize(note, 170);
+                doc.text(splitNote, 18, finalY + 13);
+            } else {
+                // Default empty box for signature
+                doc.setDrawColor(150, 150, 150);
+                doc.setLineWidth(0.3);
+                doc.rect(15, finalY, 180, 15);
+                
+                doc.setFontSize(8);
+                doc.setTextColor(100, 100, 100);
+                doc.text('Underskrift / Bemærkninger:', 18, finalY + 6);
+            }
+            
+            // Footer
+            doc.setFontSize(7);
+            doc.setTextColor(150, 150, 150);
+            doc.text(`Genereret af KORKMAN2 System - ${new Date().toLocaleString('da-DK')}`, 105, 290, { align: 'center' });
+            
+            // Save
+            doc.save(`Korselsrapport_${date.replace(/\./g, '-')}.pdf`);
             showToast('PDF genereret!');
         }
     </script>
