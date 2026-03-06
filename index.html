@@ -466,18 +466,15 @@
                 if (!a.onWay && b.onWay) return 1;
                 if (a.completed !== b.completed) return a.completed ? 1 : -1;
 
-                // ÖNCE facility'e (Aflæs. sted) göre sırala - aynı yerdekiler yan yana
                 const facilityA = (a.facility || '').toLowerCase();
                 const facilityB = (b.facility || '').toLowerCase();
                 
                 if (facilityA !== facilityB) return facilityA.localeCompare(facilityB);
                 
-                // Aynı facility ise fraksiyona göre sırala
                 const fractionA = (a.fraction || '').toLowerCase();
                 const fractionB = (b.fraction || '').toLowerCase();
                 if (fractionA !== fractionB) return fractionA.localeCompare(fractionB);
                 
-                // Son olarak adrese göre sırala
                 return (a.address || '').localeCompare(b.address || '');
             });
         }
@@ -597,7 +594,6 @@
                     return;
                 }
 
-                // Facility (Aflæs. sted) değiştiğinde çizgi çiz
                 const currentFacility = (t.facility || '').toLowerCase();
                 const isNewFacility = currentFacility !== lastFacility && lastFacility !== '';
                 lastFacility = currentFacility;
@@ -797,20 +793,30 @@
                     const isNewPdfFacility = currentPdfFacility !== lastPdfFacility && lastPdfFacility !== '';
                     lastPdfFacility = currentPdfFacility;
                     
+                    // Düzeltme: lineWidth kullanma, sadece hücre içeriği
+                    const rowStyle = isNewPdfFacility ? {fillColor: [254, 243, 199]} : {};
+                    
                     body.push([
-                        {content: t.fraction, styles: {fontSize: 8, lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}, 
-                        {content: t.facility, styles: {fontSize: 8, fontStyle: isNewPdfFacility ? 'bold' : 'normal', lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}, 
-                        {content: t.address, styles: {fontSize: 8, lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}, 
-                        {content: t.container || '', styles: {fontSize: 8, lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}, 
-                        {content: t.weight ? t.weight + ' kg' : '', styles: {fontSize: 8, fontStyle: 'bold', lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}, 
-                        {content: t.time || '', styles: {fontSize: 8, lineWidth: {top: isNewPdfFacility ? 0.5 : 0.3}}}
+                        {content: t.fraction, styles: {fontSize: 8, ...rowStyle}}, 
+                        {content: t.facility, styles: {fontSize: 8, fontStyle: isNewPdfFacility ? 'bold' : 'normal', ...rowStyle}}, 
+                        {content: t.address, styles: {fontSize: 8, ...rowStyle}}, 
+                        {content: t.container || '', styles: {fontSize: 8, ...rowStyle}}, 
+                        {content: t.weight ? t.weight + ' kg' : '', styles: {fontSize: 8, fontStyle: 'bold', ...rowStyle}}, 
+                        {content: t.time || '', styles: {fontSize: 8, ...rowStyle}}
                     ]);
                     tourCount++;
                 }
             });
 
             while (tourCount < 20) {
-                body.push([{content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}]);
+                body.push([
+                    {content: '', styles: {minCellHeight: 6}}, 
+                    {content: '', styles: {minCellHeight: 6}}, 
+                    {content: '', styles: {minCellHeight: 6}}, 
+                    {content: '', styles: {minCellHeight: 6}}, 
+                    {content: '', styles: {minCellHeight: 6}}, 
+                    {content: '', styles: {minCellHeight: 6}}
+                ]);
                 tourCount++;
             }
 
