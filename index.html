@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KORKMAN2 - Kørselsrapport</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js "></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-text-size-adjust: 100%; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: #f5f5f5; min-height: 100vh; font-size: 14px; }
@@ -70,6 +70,116 @@
         .tour-counter { background: #16a34a; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; }
         .debug-info { background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; padding: 10px; margin: 10px 15px; font-size: 0.75rem; color: #374151; max-height: 200px; overflow-y: auto; }
         .date-input { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; font-family: inherit; }
+        .driver-select { padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 0.9rem; flex: 1; min-width: 150px; background: white; }
+        .driver-select:focus { outline: none; border-color: #dc2626; }
+        .driver-tag { padding: 6px 12px; background: #e0f2fe; border-radius: 20px; font-size: 0.75rem; cursor: pointer; border: 2px solid transparent; font-weight: 600; color: #0369a1; position: relative; padding-right: 24px; }
+        .driver-tag:hover { background: #bae6fd; }
+        .driver-tag.active { background: #dc2626; color: white; border-color: #991b1b; }
+        .driver-section { background: #f0f9ff; border: 2px solid #3b82f6; }
+        .driver-section .section-header { background: #dbeafe; border-bottom-color: #3b82f6; color: #1e40af; }
+        .driver-tag .delete-btn { 
+            position: absolute; 
+            right: 4px; 
+            top: 50%; 
+            transform: translateY(-50%); 
+            background: #dc2626; 
+            color: white; 
+            border: none; 
+            border-radius: 50%; 
+            width: 16px; 
+            height: 16px; 
+            font-size: 10px; 
+            cursor: pointer; 
+            display: none;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .driver-tag:hover .delete-btn { display: flex; }
+        .driver-tag .delete-btn:hover { background: #991b1b; }
+        .add-driver-form { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 8px; 
+            padding: 12px 15px; 
+            background: #f0fdf4; 
+            border-top: 1px solid #bbf7d0;
+            margin-top: 10px;
+        }
+        .add-driver-form input { 
+            padding: 8px; 
+            border: 1px solid #d1d5db; 
+            border-radius: 6px; 
+            font-size: 0.85rem; 
+        }
+        .add-driver-form input:focus { outline: none; border-color: #16a34a; }
+        .btn-add-driver { 
+            background: #16a34a; 
+            color: white; 
+            grid-column: span 2; 
+            padding: 10px; 
+            border: none; 
+            border-radius: 6px; 
+            font-size: 0.85rem; 
+            font-weight: 700; 
+            cursor: pointer; 
+            text-transform: uppercase;
+        }
+        .btn-add-driver:hover { background: #15803d; }
+        .driver-list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 15px;
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .edit-mode-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+        }
+        .edit-mode-btn.active {
+            background: #dc2626;
+        }
+        .mail-history {
+            max-height: 150px;
+            overflow-y: auto;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            margin: 10px 15px;
+            padding: 8px;
+        }
+        .mail-history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            margin-bottom: 4px;
+            background: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            border-left: 3px solid #16a34a;
+        }
+        .mail-history-item .time {
+            color: #6b7280;
+            font-size: 0.75rem;
+        }
+        .mail-history-item .count {
+            background: #dc2626;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
     </style>
 <base target="_blank">
 </head>
@@ -97,6 +207,40 @@
                 <div class="stat-item">
                     <span class="stat-value" id="totalTime">0t</span>
                     <span>Timer</span>
+                </div>
+            </div>
+
+            <div class="section driver-section">
+                <div class="section-header">
+                    <span>Vælg Chauffør</span>
+                    <button class="edit-mode-btn" id="editModeBtn" onclick="toggleEditMode()">Rediger</button>
+                </div>
+                <div style="padding: 12px 15px;">
+                    <div class="driver-list-header">
+                        <span>Aktive chauffører</span>
+                        <span style="font-size: 0.7rem;">Hold mus over for at slette</span>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;" id="driverTags">
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <select class="driver-select" id="driverSelect" onchange="selectDriver(this.value)">
+                            <option value="">-- Vælg chauffør --</option>
+                        </select>
+                        <button class="btn btn-small" onclick="clearDriver()" style="background: #6b7280; color: white; padding: 8px 12px;">Ryd</button>
+                    </div>
+                    <div id="selectedDriverInfo" style="margin-top: 10px; padding: 10px; background: white; border-radius: 6px; display: none;">
+                        <strong id="infoName"></strong><br>
+                        <span style="color: #6b7280; font-size: 0.85rem;">Plade: <span id="infoPlate"></span></span><br>
+                        <span style="color: #6b7280; font-size: 0.85rem;">Område: <span id="infoArea"></span></span>
+                    </div>
+                </div>
+                
+                <div class="add-driver-form">
+                    <input type="text" id="newDriverName" placeholder="Chauffør navn">
+                    <input type="text" id="newDriverPlate" placeholder="Nummerplade">
+                    <input type="text" id="newDriverArea" placeholder="Område">
+                    <input type="text" id="newDriverFacility" placeholder="Anlæg (f.eks. ARGO)">
+                    <button class="btn-add-driver" onclick="addNewDriver()">+ Tilføj ny chauffør</button>
                 </div>
             </div>
 
@@ -133,6 +277,11 @@
                     <span class="plads-tag" onclick="setPlads('Ballerup')">Ballerup</span>
                     <span class="plads-tag" onclick="setPlads('Skipstrup')">Skipstrup</span>
                     <span class="plads-tag" onclick="setPlads('Helsingør')">Helsingør</span>
+                    <span class="plads-tag" onclick="setPlads('Køge')">Køge</span>
+                    <span class="plads-tag" onclick="setPlads('Bjæverskov')">Bjæverskov</span>
+                    <span class="plads-tag" onclick="setPlads('St. Heddinge')">St. Heddinge</span>
+                    <span class="plads-tag" onclick="setPlads('Hårlev')">Hårlev</span>
+                    <span class="plads-tag" onclick="setPlads('Gribskov')">Gribskov</span>
                 </div>
                 <div class="form-row">
                     <label>Andet:</label>
@@ -141,10 +290,19 @@
             </div>
 
             <div class="section">
-                <div class="section-header">Indsæt ture fra mail</div>
-                <div style="padding: 12px 15px;">
-                    <textarea class="paste-box" id="pasteArea" placeholder="Kopier ture fra mail her..."></textarea>
+                <div class="section-header">
+                    Indsæt ture fra mail
+                    <span id="mailCounter" style="background: #16a34a; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem;">0 mails</span>
                 </div>
+                <div style="padding: 12px 15px;">
+                    <textarea class="paste-box" id="pasteArea" placeholder="Kopier ture fra mail her...&#10;&#10;Format:&#10;Dato&#10;Container&#10;Fraktion&#10;Transportør&#10;Modtageanlæg (f.eks. Solum, Damifo)&#10;Adresse (f.eks. Selinevej 4, 2300 København S)"></textarea>
+                </div>
+                
+                <div id="mailHistory" class="mail-history" style="display: none;">
+                    <div style="font-size: 0.8rem; font-weight: 600; color: #374151; margin-bottom: 8px;">Tilføjede mails i dag:</div>
+                    <div id="mailHistoryList"></div>
+                </div>
+
                 <div style="padding: 0 15px 10px;">
                     <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #374151;">
                         <input type="checkbox" id="useLineGrouping" checked style="transform: scale(1.2);">
@@ -153,7 +311,7 @@
                 </div>
                 <div class="debug-info" id="debugInfo" style="display: none;"></div>
                 <div class="toolbar">
-                    <button class="btn btn-primary" onclick="parsePastedData()">+ Tilføj alle ture</button>
+                    <button class="btn btn-primary" onclick="parsePastedData()">+ Tilføj til dagens ture</button>
                     <button class="btn btn-warning" onclick="addPause()">+ Pause</button>
                     <button class="btn" onclick="clearAll()" style="background: #6b7280; color: white;">Slet alt</button>
                 </div>
@@ -222,49 +380,253 @@
         let tours = [];
         let tourIdCounter = 1;
         let currentPlads = '';
+        let currentDriver = null;
+        let editMode = false;
+        let mailHistory = [];
+        let drivers = [];
+
+        const defaultDrivers = [
+            { id: 1, name: 'Dennis', plate: 'DV 10239', area: 'Ballerup - Vestforbrændingen', facility: 'VESTFORB. VF' },
+            { id: 2, name: 'Zekiye', plate: 'DY 84184', area: 'Højelt - Gribskov', facility: 'VESTFORB. VF' },
+            { id: 3, name: 'Emrer', plate: 'EC 25026', area: 'Køge - ARGO', facility: 'ARGO' },
+            { id: 4, name: 'Ferdal', plate: 'EN 80295', area: 'Glostrup Vestforbrænding', facility: 'VESTFORB. VF' },
+            { id: 5, name: '', plate: 'DM 13404', area: 'FRI', facility: '' },
+            { id: 6, name: 'Rafael', plate: 'DR 30142', area: 'Bjæverskov - ARGO', facility: 'ARGO' },
+            { id: 7, name: 'John', plate: 'DS 78545', area: 'Hårlev/ St. Heddinge - ARGO', facility: 'ARGO' },
+            { id: 8, name: 'Thomas', plate: 'DY 84177', area: 'Hillerød - Vestforbrænding', facility: 'VESTFORB. VF' },
+            { id: 9, name: 'Tony', plate: 'EB 64418', area: 'Skibstrup - Omlasten - Cirklen', facility: 'HELSINGØR F.' },
+            { id: 10, name: 'Murat', plate: 'EN 80294', area: 'Herlev Vestforbrænding', facility: 'VESTFORB. VF' },
+            { id: 11, name: 'Nihat', plate: 'EC 66505', area: 'Skibstrup - Omlasten - Cirklen', facility: 'HELSINGØR F.' },
+            { id: 12, name: 'Berrin', plate: 'BN55130', area: 'Tekstil Vestforbrænding', facility: '' }
+        ];
 
         function loadData() {
             try {
-                const saved = localStorage.getItem('korkman2_tours');
-                const counter = localStorage.getItem('korkman2_counter');
-                const plads = localStorage.getItem('korkman2_plads');
-                const notes = localStorage.getItem('korkman2_notes');
-                const reportDate = localStorage.getItem('korkman2_reportDate');
-
-                if (saved) tours = JSON.parse(saved);
-                if (counter) tourIdCounter = parseInt(counter);
-                if (plads) {
-                    currentPlads = plads;
+                const savedTours = localStorage.getItem('korkman2_tours');
+                if (savedTours) tours = JSON.parse(savedTours);
+                
+                const savedCounter = localStorage.getItem('korkman2_counter');
+                if (savedCounter) tourIdCounter = parseInt(savedCounter);
+                
+                const savedPlads = localStorage.getItem('korkman2_plads');
+                if (savedPlads) {
+                    currentPlads = savedPlads;
                     document.querySelectorAll('.plads-tag').forEach(t => {
-                        if (t.textContent === plads) t.classList.add('active');
+                        if (t.textContent === currentPlads) t.classList.add('active');
                     });
                 }
-                if (notes) document.getElementById('notesText').value = notes;
                 
+                const savedNotes = localStorage.getItem('korkman2_notes');
+                if (savedNotes) document.getElementById('notesText').value = savedNotes;
+                
+                const savedDate = localStorage.getItem('korkman2_reportDate');
                 const dateInput = document.getElementById('reportDate');
-                if (reportDate) {
-                    dateInput.value = reportDate;
-                } else {
-                    dateInput.valueAsDate = new Date();
+                if (savedDate) dateInput.value = savedDate;
+                else dateInput.valueAsDate = new Date();
+
+                const savedDrivers = localStorage.getItem('korkman2_drivers_list');
+                if (savedDrivers) drivers = JSON.parse(savedDrivers);
+                else {
+                    drivers = [...defaultDrivers];
+                    saveDrivers();
                 }
-            } catch (e) { console.error(e); }
+
+                const savedMailHistory = localStorage.getItem('korkman2_mail_history');
+                if (savedMailHistory) mailHistory = JSON.parse(savedMailHistory);
+
+                const savedDriver = localStorage.getItem('korkman2_driver');
+                if (savedDriver) {
+                    const driver = drivers.find(d => d.id === parseInt(savedDriver));
+                    if (driver) {
+                        currentDriver = driver;
+                        document.getElementById('driverName').value = driver.name || 'FRI';
+                        document.getElementById('vehicleReg').value = driver.plate;
+                    }
+                }
+            } catch (e) {
+                console.error('Error loading data:', e);
+                tours = [];
+                tourIdCounter = 1;
+                drivers = [...defaultDrivers];
+            }
         }
 
         function saveData() {
-            localStorage.setItem('korkman2_tours', JSON.stringify(tours));
-            localStorage.setItem('korkman2_counter', tourIdCounter);
-            localStorage.setItem('korkman2_plads', currentPlads);
-            localStorage.setItem('korkman2_notes', document.getElementById('notesText').value);
-            localStorage.setItem('korkman2_reportDate', document.getElementById('reportDate').value);
+            try {
+                localStorage.setItem('korkman2_tours', JSON.stringify(tours));
+                localStorage.setItem('korkman2_counter', tourIdCounter.toString());
+                localStorage.setItem('korkman2_plads', currentPlads);
+                localStorage.setItem('korkman2_notes', document.getElementById('notesText').value);
+                localStorage.setItem('korkman2_reportDate', document.getElementById('reportDate').value);
+                if (currentDriver) localStorage.setItem('korkman2_driver', currentDriver.id.toString());
+                else localStorage.removeItem('korkman2_driver');
+            } catch (e) {
+                console.error('Error saving data:', e);
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        function saveMailHistory() {
+            try {
+                localStorage.setItem('korkman2_mail_history', JSON.stringify(mailHistory));
+            } catch (e) {
+                console.error('Error saving mail history:', e);
+            }
+        }
+
+        function saveDrivers() {
+            try {
+                localStorage.setItem('korkman2_drivers_list', JSON.stringify(drivers));
+            } catch (e) {
+                console.error('Error saving drivers:', e);
+            }
+        }
+
+        function renderMailHistory() {
+            const container = document.getElementById('mailHistory');
+            const list = document.getElementById('mailHistoryList');
+            const counter = document.getElementById('mailCounter');
+            
+            if (mailHistory.length === 0) {
+                container.style.display = 'none';
+                counter.textContent = '0 mails';
+                return;
+            }
+
+            container.style.display = 'block';
+            counter.textContent = `${mailHistory.length} mail${mailHistory.length > 1 ? 's' : ''}`;
+
+            list.innerHTML = mailHistory.map((mail, index) => `
+                <div class="mail-history-item">
+                    <div>
+                        <div style="font-weight: 600;">Mail #${index + 1}</div>
+                        <div class="time">${mail.time}</div>
+                    </div>
+                    <span class="count">+${mail.count} ture</span>
+                </div>
+            `).join('');
+        }
+
+        function toggleEditMode() {
+            editMode = !editMode;
+            const btn = document.getElementById('editModeBtn');
+            btn.textContent = editMode ? 'Færdig' : 'Rediger';
+            btn.classList.toggle('active', editMode);
+            renderDriverTags();
+            showToast(editMode ? 'Redigering aktiveret' : 'Redigering deaktiveret');
+        }
+
+        function deleteDriver(driverId, event) {
+            event.stopPropagation();
+            if (!confirm('Er du sikker på, at du vil slette denne chauffør?')) return;
+            drivers = drivers.filter(d => d.id !== driverId);
+            saveDrivers();
+            if (currentDriver && currentDriver.id === driverId) clearDriver();
+            initDriverSelect();
+            renderDriverTags();
+            showToast('Chauffør slettet');
+        }
+
+        function addNewDriver() {
+            const name = document.getElementById('newDriverName').value.trim();
+            const plate = document.getElementById('newDriverPlate').value.trim();
+            const area = document.getElementById('newDriverArea').value.trim();
+            const facility = document.getElementById('newDriverFacility').value.trim();
+
+            if (!plate) {
+                showToast('Nummerplade er påkrævet!');
+                return;
+            }
+
+            const newId = drivers.length > 0 ? Math.max(...drivers.map(d => d.id)) + 1 : 1;
+            drivers.push({ id: newId, name: name || 'FRI', plate: plate, area: area || '', facility: facility || '' });
+            saveDrivers();
+            initDriverSelect();
+            renderDriverTags();
+            
+            document.getElementById('newDriverName').value = '';
+            document.getElementById('newDriverPlate').value = '';
+            document.getElementById('newDriverArea').value = '';
+            document.getElementById('newDriverFacility').value = '';
+            showToast('Ny chauffør tilføjet!');
+        }
+
+        function renderDriverTags() {
+            const tagsContainer = document.getElementById('driverTags');
+            tagsContainer.innerHTML = '';
+            drivers.forEach(driver => {
+                const tag = document.createElement('span');
+                tag.className = 'driver-tag';
+                tag.textContent = driver.name || driver.plate;
+                if (currentDriver && currentDriver.id === driver.id) tag.classList.add('active');
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.innerHTML = '×';
+                deleteBtn.onclick = (e) => deleteDriver(driver.id, e);
+                tag.appendChild(deleteBtn);
+                
+                if (!editMode) tag.onclick = () => selectDriver(driver.id);
+                else deleteBtn.style.display = 'flex';
+                
+                tagsContainer.appendChild(tag);
+            });
+        }
+
+        function initDriverSelect() {
+            const select = document.getElementById('driverSelect');
+            select.innerHTML = '<option value="">-- Vælg chauffør --</option>';
+            drivers.forEach(driver => {
+                const option = document.createElement('option');
+                option.value = driver.id;
+                option.textContent = `${driver.name || 'FRI'} - ${driver.plate}`;
+                select.appendChild(option);
+            });
+        }
+
+        function selectDriver(driverId) {
+            const driver = drivers.find(d => d.id === parseInt(driverId));
+            if (!driver) return;
+            currentDriver = driver;
+            document.getElementById('driverName').value = driver.name || 'FRI';
+            document.getElementById('vehicleReg').value = driver.plate;
+            document.getElementById('driverSelect').value = driverId;
+            renderDriverTags();
+            const infoPanel = document.getElementById('selectedDriverInfo');
+            infoPanel.style.display = 'block';
+            document.getElementById('infoName').textContent = driver.name || 'FRI';
+            document.getElementById('infoPlate').textContent = driver.plate;
+            document.getElementById('infoArea').textContent = driver.area;
+            
+            if (driver.area) {
+                const areaMap = { 'Køge': 'Køge', 'Bjæverskov': 'Bjæverskov', 'St. Heddinge': 'St. Heddinge', 'Hårlev': 'Hårlev', 'Gribskov': 'Gribskov', 'Ballerup': 'Ballerup', 'Glostrup': 'Glostrup', 'Herlev': 'Herlev', 'Hillerød': 'Hillerød', 'Skibstrup': 'Skipstrup', 'Helsingør': 'Helsingør' };
+                for (const [key, value] of Object.entries(areaMap)) {
+                    if (driver.area.includes(key)) { setPlads(value); break; }
+                }
+            }
+            saveData();
+            showToast(`Chauffør: ${driver.name || driver.plate}`);
+        }
+
+        function clearDriver() {
+            currentDriver = null;
+            document.getElementById('driverSelect').value = '';
+            renderDriverTags();
+            document.getElementById('selectedDriverInfo').style.display = 'none';
+            document.getElementById('driverName').value = '';
+            document.getElementById('vehicleReg').value = '';
+            saveData();
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
             loadData();
+            initDriverSelect();
+            renderDriverTags();
+            renderMailHistory();
             updateCharCount();
             renderTours();
             updateStats();
             calculateTotalTime();
-            setInterval(saveData, 2000);
+            setInterval(saveData, 3000);
         });
 
         function showToast(msg) {
@@ -276,9 +638,7 @@
 
         function setPlads(p) {
             currentPlads = p;
-            document.querySelectorAll('.plads-tag').forEach(t => {
-                t.classList.toggle('active', t.textContent === p);
-            });
+            document.querySelectorAll('.plads-tag').forEach(t => t.classList.toggle('active', t.textContent === p));
             document.getElementById('customPlads').value = '';
             saveData();
         }
@@ -293,6 +653,7 @@
             document.getElementById('tourCountBadge').style.background = count >= 20 ? '#dc2626' : (count >= 15 ? '#f59e0b' : '#16a34a');
         }
 
+        // DÜZELTME: Parse fonksiyonu - firma ve adres ayrımı düzeltildi
         function parsePastedData() {
             const text = document.getElementById('pasteArea').value.trim();
             const debugInfo = document.getElementById('debugInfo');
@@ -307,28 +668,30 @@
             debugInfo.innerHTML = 'Analyserer...<br>';
 
             let added = 0;
-
-            if (useLineGrouping) {
-                added = parseSmartLineGrouping(text, debugInfo);
-            } else {
-                added = parseNormalData(text, debugInfo);
-            }
+            if (useLineGrouping) added = parseSmartLineGrouping(text, debugInfo);
+            else added = parseNormalData(text, debugInfo);
 
             if (added > 0) {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+                mailHistory.push({ time: timeStr, count: added, timestamp: now.getTime() });
+                saveMailHistory();
+                renderMailHistory();
                 document.getElementById('pasteArea').value = '';
                 sortAndGroupTours();
                 renderTours();
                 updateStats();
                 updateTourCounter();
                 saveData();
-                showToast(`${added} ture tilføjet!`);
+                showToast(`${added} nye ture tilføjet! Total: ${tours.filter(t => !t.isPause).length} ture`);
                 debugInfo.innerHTML += `<strong style="color: green;">✓ ${added} ture tilføjet!</strong>`;
             } else {
-                showToast('Ingen ture fundet!');
-                debugInfo.innerHTML += '<strong style="color: red;">✗ Ingen ture tilføjet</strong>';
+                showToast('Ingen ture fundet i mail!');
+                debugInfo.innerHTML += '<strong style="color: red;">✗ Ingen ture fundet</strong>';
             }
         }
 
+        // DÜZELTME: Firma ve adres ayrımı burada yapılıyor
         function parseSmartLineGrouping(text, debugInfo) {
             const lines = text.split('\n').map(l => l.trim()).filter(l => l);
             let added = 0;
@@ -339,9 +702,7 @@
             const tourStartIndices = [];
 
             for (let i = 0; i < lines.length; i++) {
-                if (datePattern.test(lines[i])) {
-                    tourStartIndices.push(i);
-                }
+                if (datePattern.test(lines[i])) tourStartIndices.push(i);
             }
 
             debugInfo.innerHTML += `${tourStartIndices.length} ture fundet<br>`;
@@ -356,52 +717,53 @@
                 const endIdx = (i + 1 < tourStartIndices.length) ? tourStartIndices[i + 1] : lines.length;
                 const tourLines = lines.slice(startIdx, endIdx);
 
-                if (tourLines.length < 5) {
+                if (tourLines.length < 6) {
                     debugInfo.innerHTML += `For få linjer i tur ${i+1}: ${tourLines.length}<br>`;
                     continue;
                 }
 
-                const date = tourLines[0];
-                const container = tourLines[1] || '';
-                const fraction = tourLines[2] || '';
-                const transportType = tourLines[3] || '';
-                const facility = tourLines[4] || '';
-                const address = tourLines[5] || '';
+                // DÜZELTME: Doğru indeksler
+                const date = tourLines[0];           // 1. satır: Dato
+                const container = tourLines[1] || ''; // 2. satır: Container
+                const fraction = tourLines[2] || '';  // 3. satır: Fraktion
+                const transportType = tourLines[3] || ''; // 4. satır: Transportør (atıyorum)
+                const facility = tourLines[4] || '';  // 5. satır: Modtageanlæg (Solum, Damifo, RGS)
+                const address = tourLines[5] || '';   // 6. satır: Adresse (Selinevej 4, 2300 København S)
+
+                // Eğer 6. satır yoksa, sonraki satırları adres olarak birleştir
+                let fullAddress = address;
+                if (tourLines.length > 6) {
+                    fullAddress = tourLines.slice(5).join(', ');
+                }
 
                 if (!fraction || !facility) {
-                    debugInfo.innerHTML += `Mangler data i tur ${i+1}<br>`;
+                    debugInfo.innerHTML += `Mangler data i tur ${i+1} - fraction: ${fraction}, facility: ${facility}<br>`;
                     continue;
                 }
 
-                const exists = tours.some(t => 
-                    !t.isPause && 
-                    t.container === container &&
-                    t.fraction === fraction && 
-                    t.facility === facility && 
-                    t.address === address
-                );
+                // DÜZELTME: Firma ismini temizle (sadece firma adı)
+                const cleanFacility = facility.replace(/\(.*?\)/g, '').trim();
+                
+                // DÜZELTME: Adresi temizle
+                const cleanAddress = fullAddress.replace(/^\d+\s*/, '').trim();
 
-                if (!exists) {
-                    tours.push({
-                        id: tourIdCounter++,
-                        date: date,
-                        container: container,
-                        fraction: fraction,
-                        facility: facility,
-                        address: address,
-                        completed: false,
-                        weight: '',
-                        time: '',
-                        isPause: false,
-                        isSameDay: false,
-                        plads: currentPlads,
-                        onWay: false
-                    });
-                    added++;
-                    debugInfo.innerHTML += `✓ ${fraction.substring(0, 25)}<br>`;
-                } else {
-                    debugInfo.innerHTML += `○ Eksisterer: ${fraction.substring(0, 20)}...<br>`;
-                }
+                tours.push({
+                    id: tourIdCounter++,
+                    date: date,
+                    container: container,
+                    fraction: fraction,
+                    facility: cleanFacility,  // Solum, Damifo, RGS
+                    address: cleanAddress,    // Selinevej 4, 2300 København S
+                    completed: false,
+                    weight: '',
+                    time: '',
+                    isPause: false,
+                    isSameDay: false,
+                    plads: currentPlads,
+                    onWay: false
+                });
+                added++;
+                debugInfo.innerHTML += `✓ ${fraction} → ${cleanFacility} | ${cleanAddress.substring(0, 30)}...<br>`;
             }
 
             return added;
@@ -413,29 +775,16 @@
 
             for (let line of lines) {
                 if (tours.filter(t => !t.isPause).length >= 20) break;
-
                 if (!/^\d{1,2}[-/]\d{2}[-/]\d{4}/.test(line)) continue;
 
-                const parts = line.split(/\s+/);
-                if (parts.length < 6) continue;
+                const parts = line.split(/\t/); // Tab ile ayrılmışsa
+                if (parts.length >= 6) {
+                    const date = parts[0];
+                    const container = parts[1];
+                    const fraction = parts[2];
+                    const facility = parts[4]; // Modtageanlæg
+                    const address = parts[5];  // Adresse
 
-                const date = parts[0];
-                const container = parts[1];
-                const fraction = parts[2];
-                const facility = parts.slice(4, 6).join(' ');
-                const address = parts.slice(6, 9).join(' ');
-
-                if (!fraction || !facility) continue;
-
-                const exists = tours.some(t => 
-                    !t.isPause && 
-                    t.container === container &&
-                    t.fraction === fraction && 
-                    t.facility === facility &&
-                    t.address === address
-                );
-
-                if (!exists) {
                     tours.push({
                         id: tourIdCounter++,
                         date: date,
@@ -454,7 +803,6 @@
                     added++;
                 }
             }
-
             return added;
         }
 
@@ -468,7 +816,6 @@
 
                 const facilityA = (a.facility || '').toLowerCase();
                 const facilityB = (b.facility || '').toLowerCase();
-                
                 if (facilityA !== facilityB) return facilityA.localeCompare(facilityB);
                 
                 const fractionA = (a.fraction || '').toLowerCase();
@@ -557,11 +904,8 @@
             const t = tours.find(x => x.id === id);
             if (t && !t.completed) {
                 t.onWay = !t.onWay;
-                if (t.onWay) {
-                    t.time = new Date().toTimeString().slice(0, 5);
-                } else {
-                    t.time = '';
-                }
+                if (t.onWay) t.time = new Date().toTimeString().slice(0, 5);
+                else t.time = '';
                 sortAndGroupTours();
                 renderTours();
                 updateStats();
@@ -571,7 +915,7 @@
 
         function renderTours() {
             const tbody = document.getElementById('toursBody');
-            if (!tours.length) {
+            if (!tours || tours.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #9ca3af;">Ingen ture endnu</td></tr>';
                 updateTourCounter();
                 return;
@@ -579,7 +923,6 @@
 
             let lastFacility = '';
             let html = '';
-
             const sorted = getSortedTours();
 
             sorted.forEach(t => {
@@ -588,7 +931,7 @@
                         <td colspan="3"><strong>☕ PAUSE ${t.pauseDuration} min</strong></td>
                         <td>-</td>
                         <td>-</td>
-                        <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
+                        <td><input type="time" value="${t.time || ''}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
                         <td><button class="btn-small btn-remove" onclick="removeTour(${t.id})">🗑️</button></td>
                     </tr>`;
                     return;
@@ -602,12 +945,12 @@
                 const containerDisplay = t.container ? `<span class="container-nr">${t.container}</span>` : '';
 
                 html += `<tr class="${t.completed ? 'completed' : ''} ${t.isSameDay ? 'same-day' : ''} ${t.onWay ? 'on-way' : ''} ${isNewFacility ? 'new-facility' : ''}">
-                    <td>${t.fraction} ${sameDayBadge}</td>
-                    <td>${t.facility}</td>
-                    <td>${t.address}</td>
+                    <td>${t.fraction || ''} ${sameDayBadge}</td>
+                    <td>${t.facility || ''}</td>
+                    <td>${t.address || ''}</td>
                     <td>${t.container || '-'}${containerDisplay}</td>
-                    <td><input type="number" value="${t.weight}" onchange="updateWeight(${t.id}, this.value)" style="width: 60px;" placeholder="kg"></td>
-                    <td><input type="time" value="${t.time}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
+                    <td><input type="number" value="${t.weight || ''}" onchange="updateWeight(${t.id}, this.value)" style="width: 60px;" placeholder="kg"></td>
+                    <td><input type="time" value="${t.time || ''}" onchange="updateTime(${t.id}, this.value)" style="width: 70px;"></td>
                     <td>
                         ${t.completed 
                             ? `<button class="btn-small btn-undo" onclick="toggleComplete(${t.id})">↩️</button>`
@@ -628,9 +971,7 @@
             const t = tours.find(x => x.id === id);
             if (t) {
                 t.weight = w;
-                if (w && !t.time) {
-                    t.time = new Date().toTimeString().slice(0, 5);
-                }
+                if (w && !t.time) t.time = new Date().toTimeString().slice(0, 5);
                 if (w && t.onWay) {
                     t.completed = true;
                     t.onWay = false;
@@ -676,17 +1017,13 @@
         function calculateTotalTime() {
             const s = document.getElementById('startTime').value;
             const e = document.getElementById('endTime').value;
-
             let h = 0, m = 0;
-
             if (s && e) {
                 let diff = new Date(`2000-01-01T${e}`) - new Date(`2000-01-01T${s}`);
                 if (diff < 0) diff += 24 * 60 * 60 * 1000;
-
                 h = Math.floor(diff / (1000 * 60 * 60));
                 m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             }
-
             document.getElementById('timeDisplay').textContent = `${h}t ${m}m`;
             return { h, m };
         }
@@ -695,11 +1032,9 @@
             const total = tours.filter(t => !t.isPause).length;
             const done = tours.filter(t => t.completed && !t.isPause).length;
             const w = tours.filter(t => t.completed && !t.isPause && t.weight).reduce((s, t) => s + (parseFloat(t.weight) || 0), 0);
-
             document.getElementById('totalTours').textContent = total;
             document.getElementById('completedTours').textContent = done;
             document.getElementById('totalWeight').textContent = w.toLocaleString('da-DK');
-
             const t = calculateTotalTime();
             document.getElementById('totalTime').textContent = `${t.h}t`;
         }
@@ -708,9 +1043,17 @@
             if (!confirm('Slet ALLE ture?')) return;
             tours = [];
             tourIdCounter = 1;
-            localStorage.clear();
+            mailHistory = [];
+            localStorage.removeItem('korkman2_tours');
+            localStorage.removeItem('korkman2_counter');
+            localStorage.removeItem('korkman2_plads');
+            localStorage.removeItem('korkman2_notes');
+            localStorage.removeItem('korkman2_reportDate');
+            localStorage.removeItem('korkman2_driver');
+            localStorage.removeItem('korkman2_mail_history');
             document.getElementById('notesText').value = '';
             document.getElementById('debugInfo').style.display = 'none';
+            renderMailHistory();
             updateCharCount();
             renderTours();
             updateStats();
@@ -720,7 +1063,6 @@
         function generatePDF() {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('p', 'mm', 'a4');
-
             const driver = document.getElementById('driverName').value || 'Ferdat Turan';
             const vehicle = document.getElementById('vehicleReg').value || 'EC25026';
             const start = document.getElementById('startTime').value || '07:00';
@@ -731,7 +1073,6 @@
 
             doc.setFillColor(220, 38, 38);
             doc.rect(0, 0, 210, 22, 'F');
-
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
@@ -739,7 +1080,6 @@
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
             doc.text('ILK Company ApS', 15, 17);
-
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.text('KØRSELSRAPPORT', 140, 12);
@@ -749,24 +1089,9 @@
             doc.autoTable({
                 startY: 28,
                 body: [
-                    [
-                        {content: 'CHAUFFØR NAVN', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
-                        {content: driver, styles: {fontSize: 9}}, 
-                        {content: 'VOGN NR.', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
-                        {content: vehicle, styles: {fontSize: 9}}
-                    ],
-                    [
-                        {content: 'START TID', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
-                        {content: start, styles: {fontSize: 9}},
-                        {content: 'SLUT TID', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
-                        {content: end, styles: {fontSize: 9}}
-                    ],
-                    [
-                        {content: 'PLADS', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
-                        {content: currentPlads || '-', styles: {fontSize: 9}},
-                        {content: 'TID I ALT', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, 
-                        {content: `${time.h}t ${time.m}m`, styles: {fontSize: 9, fontStyle: 'bold', textColor: [200,0,0]}}
-                    ]
+                    [{content: 'CHAUFFØR NAVN', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, {content: driver, styles: {fontSize: 9}}, {content: 'VOGN NR.', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, {content: vehicle, styles: {fontSize: 9}}],
+                    [{content: 'START TID', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, {content: start, styles: {fontSize: 9}}, {content: 'SLUT TID', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, {content: end, styles: {fontSize: 9}}],
+                    [{content: 'PLADS', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, {content: currentPlads || '-', styles: {fontSize: 9}}, {content: 'TID I ALT', styles: {fillColor: [240,240,240], fontSize: 8, fontStyle: 'bold'}}, {content: `${time.h}t ${time.m}m`, styles: {fontSize: 9, fontStyle: 'bold', textColor: [200,0,0]}}]
                 ],
                 theme: 'grid',
                 styles: {cellPadding: 3, lineWidth: 0.4, lineColor: [150,150,150]},
@@ -778,24 +1103,17 @@
             let body = [];
             let tourCount = 0;
             let lastPdfFacility = '';
-
             const sorted = getSortedTours().filter(t => t.completed || t.isPause);
 
             sorted.forEach(t => {
                 if (tourCount >= 20) return;
-
                 if (t.isPause) {
-                    body.push([
-                        {content: `PAUSE ${t.pauseDuration}min`, colSpan: 6, styles: {fillColor: [254, 243, 199], fontStyle: 'bold', fontSize: 8}}
-                    ]);
+                    body.push([{content: `PAUSE ${t.pauseDuration}min`, colSpan: 6, styles: {fillColor: [254, 243, 199], fontStyle: 'bold', fontSize: 8}}]);
                 } else {
                     const currentPdfFacility = (t.facility || '').toLowerCase();
                     const isNewPdfFacility = currentPdfFacility !== lastPdfFacility && lastPdfFacility !== '';
                     lastPdfFacility = currentPdfFacility;
-                    
-                    // Düzeltme: lineWidth kullanma, sadece hücre içeriği
                     const rowStyle = isNewPdfFacility ? {fillColor: [254, 243, 199]} : {};
-                    
                     body.push([
                         {content: t.fraction, styles: {fontSize: 8, ...rowStyle}}, 
                         {content: t.facility, styles: {fontSize: 8, fontStyle: isNewPdfFacility ? 'bold' : 'normal', ...rowStyle}}, 
@@ -809,14 +1127,7 @@
             });
 
             while (tourCount < 20) {
-                body.push([
-                    {content: '', styles: {minCellHeight: 6}}, 
-                    {content: '', styles: {minCellHeight: 6}}, 
-                    {content: '', styles: {minCellHeight: 6}}, 
-                    {content: '', styles: {minCellHeight: 6}}, 
-                    {content: '', styles: {minCellHeight: 6}}, 
-                    {content: '', styles: {minCellHeight: 6}}
-                ]);
+                body.push([{content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}, {content: '', styles: {minCellHeight: 6}}]);
                 tourCount++;
             }
 
@@ -839,7 +1150,6 @@
                 doc.setFontSize(9);
                 doc.setFont('helvetica', 'bold');
                 doc.text('NOTER:', 17, finalY + 4);
-
                 finalY += 8;
                 const splitNotes = doc.splitTextToSize(notes, 176);
                 doc.setFontSize(8);
